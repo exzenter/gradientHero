@@ -1,11 +1,21 @@
 // Control Panel Toggle
-const controlToggle = document.getElementById('controlToggle');
+const settingsBtn = document.getElementById('settingsBtn');
 const controlsOverlay = document.getElementById('controlsOverlay');
 const closeControls = document.getElementById('closeControls');
 
-controlToggle.addEventListener('click', () => {
-  controlsOverlay.classList.toggle('active');
-});
+if (settingsBtn) {
+  settingsBtn.addEventListener('click', () => {
+    controlsOverlay.classList.toggle('active');
+  });
+}
+
+// Hero Export Button
+const heroExportBtn = document.getElementById('exportBtn');
+if (heroExportBtn) {
+  heroExportBtn.addEventListener('click', async () => {
+    await exportAnimation();
+  });
+}
 
 closeControls.addEventListener('click', () => {
   controlsOverlay.classList.remove('active');
