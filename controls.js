@@ -54,6 +54,8 @@ const defaults = {
   saturation: 100,
   hue: 0,
   videoScale: 100,
+  gradientSize: 100,
+  gradientSizeMode: 'base',
   positionX: 50,
   positionY: 50,
   blendMode: 'normal',
@@ -79,13 +81,20 @@ const defaults = {
   paletteColor5: '#8bdaff',
   textColor: '#ffffff',
   textBlendMode: 'normal',
+  textMarkerEnabled: false,
+  textMarkerColor: '#b60011',
   svgEnabled: true,
   svgOpacity: 15,
   svgSize: 100,
   svgStrokeWidth: 1,
   svgPattern: 'grid',
   svgColor: '#ffffff',
-  svgBlendMode: 'normal'
+  svgBlendMode: 'normal',
+  radialGradientsEnabled: true,
+  lineGradientsEnabled: false,
+  lineGradientAngle: 0,
+  lineGradientLength: 200,
+  lineGradientWidth: 100
 };
 
 // Initialize controls
@@ -200,6 +209,31 @@ function initControls() {
     }
   });
 
+  // Gradient Size
+  const gradientSize = document.getElementById('gradientSize');
+  const gradientSizeValue = document.getElementById('gradientSizeValue');
+  setupValueInput(gradientSizeValue, gradientSize, '%', (value) => {
+    if (gradientAnimation) {
+      gradientAnimation.updateSetting('gradientSizeMultiplier', value / 100);
+    }
+  });
+
+  // Gradient Size Mode (Radio buttons)
+  const gradientSizeModeBase = document.getElementById('gradientSizeModeBase');
+  const gradientSizeModeDrawing = document.getElementById('gradientSizeModeDrawing');
+  
+  function updateGradientSizeMode() {
+    if (gradientAnimation) {
+      const mode = gradientSizeModeBase.checked ? 'base' : 'drawing';
+      gradientAnimation.updateSetting('gradientSizeMode', mode);
+    }
+  }
+
+  if (gradientSizeModeBase && gradientSizeModeDrawing) {
+    gradientSizeModeBase.addEventListener('change', updateGradientSizeMode);
+    gradientSizeModeDrawing.addEventListener('change', updateGradientSizeMode);
+  }
+
   // Position X
   const positionX = document.getElementById('positionX');
   const positionXValue = document.getElementById('positionXValue');
@@ -217,6 +251,16 @@ function initControls() {
       gradientAnimation.updateSetting('positionY', value / 100);
     }
   });
+
+  // Radial Gradients Enabled
+  const radialGradientsEnabled = document.getElementById('radialGradientsEnabled');
+  if (radialGradientsEnabled) {
+    radialGradientsEnabled.addEventListener('change', (e) => {
+      if (gradientAnimation) {
+        gradientAnimation.updateSetting('radialGradientsEnabled', e.target.checked);
+      }
+    });
+  }
 
   // Blend Mode
   const blendMode = document.getElementById('blendMode');
@@ -560,10 +604,55 @@ function initControls() {
   svgColor.addEventListener('input', updateSVGOverlay);
   svgBlendMode.addEventListener('change', updateSVGOverlay);
 
+  // Line Gradients Controls
+  const lineGradientsEnabled = document.getElementById('lineGradientsEnabled');
+  const lineGradientAngle = document.getElementById('lineGradientAngle');
+  const lineGradientAngleValue = document.getElementById('lineGradientAngleValue');
+  const lineGradientLength = document.getElementById('lineGradientLength');
+  const lineGradientLengthValue = document.getElementById('lineGradientLengthValue');
+  const lineGradientWidth = document.getElementById('lineGradientWidth');
+  const lineGradientWidthValue = document.getElementById('lineGradientWidthValue');
+
+  if (lineGradientsEnabled) {
+    lineGradientsEnabled.addEventListener('change', (e) => {
+      if (gradientAnimation) {
+        gradientAnimation.updateSetting('lineGradientsEnabled', e.target.checked);
+      }
+    });
+  }
+
+  if (lineGradientAngle && lineGradientAngleValue) {
+    setupValueInput(lineGradientAngleValue, lineGradientAngle, '°', (value) => {
+      if (gradientAnimation) {
+        gradientAnimation.updateSetting('lineGradientAngle', value);
+      }
+    });
+  }
+
+  if (lineGradientLength && lineGradientLengthValue) {
+    setupValueInput(lineGradientLengthValue, lineGradientLength, 'px', (value) => {
+      if (gradientAnimation) {
+        gradientAnimation.updateSetting('lineGradientLength', value);
+      }
+    });
+  }
+
+  if (lineGradientWidth && lineGradientWidthValue) {
+    setupValueInput(lineGradientWidthValue, lineGradientWidth, 'px', (value) => {
+      if (gradientAnimation) {
+        gradientAnimation.updateSetting('lineGradientWidth', value);
+      }
+    });
+  }
+
   // Text Controls
   const heroContent = document.querySelector('.hero-content');
+  const heroH1 = heroContent ? heroContent.querySelector('h1') : null;
   const textColor = document.getElementById('textColor');
   const textBlendMode = document.getElementById('textBlendMode');
+  const textMarkerEnabled = document.getElementById('textMarkerEnabled');
+  const textMarkerColor = document.getElementById('textMarkerColor');
+  const textMarkerColorControl = document.getElementById('textMarkerColorControl');
 
   if (textColor && heroContent) {
     // Set initial value
@@ -579,6 +668,80 @@ function initControls() {
     textBlendMode.addEventListener('change', (e) => {
       heroContent.style.mixBlendMode = e.target.value;
     });
+  }
+
+  // Text Marker Background
+  function updateTextMarker() {
+    if (!heroH1) return;
+    
+    const enabled = textMarkerEnabled.checked;
+    
+    if (enabled) {
+      const markerColor = textMarkerColor.value;
+      
+      // Wrap text in span for line-by-line marker effect
+      let wrapper = heroH1.querySelector('.text-marker-wrapper');
+      if (!wrapper) {
+        // Store original text if not already stored
+        if (!heroH1.dataset.originalText) {
+          heroH1.dataset.originalText = heroH1.textContent;
+        }
+        const text = heroH1.dataset.originalText || heroH1.textContent;
+        wrapper = document.createElement('span');
+        wrapper.className = 'text-marker-wrapper';
+        wrapper.textContent = text;
+        heroH1.textContent = '';
+        heroH1.appendChild(wrapper);
+      }
+      
+      // Apply marker styles to wrapper
+      wrapper.style.display = 'inline';
+      wrapper.style.padding = '10px 20px';
+      wrapper.style.backgroundColor = markerColor;
+      wrapper.style.color = '#fff';
+      wrapper.style.webkitBoxDecorationBreak = 'clone';
+      wrapper.style.boxDecorationBreak = 'clone';
+      wrapper.style.marginBottom = '0';
+    } else {
+      // Remove wrapper and restore original text
+      const wrapper = heroH1.querySelector('.text-marker-wrapper');
+      if (wrapper) {
+        const originalText = heroH1.dataset.originalText || wrapper.textContent;
+        heroH1.textContent = originalText;
+        heroH1.removeAttribute('data-original-text');
+      }
+      
+      // Reset styles
+      heroH1.style.padding = '';
+      heroH1.style.backgroundColor = '';
+      heroH1.style.color = '';
+      heroH1.style.webkitBoxDecorationBreak = '';
+      heroH1.style.boxDecorationBreak = '';
+      heroH1.style.marginBottom = '';
+      
+      // Restore text color from textColor picker
+      if (textColor) {
+        heroContent.style.color = textColor.value;
+      }
+    }
+  }
+
+  if (textMarkerEnabled && textMarkerColor && textMarkerColorControl) {
+    // Show/hide color picker based on checkbox
+    textMarkerEnabled.addEventListener('change', (e) => {
+      textMarkerColorControl.style.display = e.target.checked ? 'block' : 'none';
+      updateTextMarker();
+    });
+
+    // Update marker when color changes
+    textMarkerColor.addEventListener('input', () => {
+      if (textMarkerEnabled.checked) {
+        updateTextMarker();
+      }
+    });
+
+    // Initial update
+    updateTextMarker();
   }
 
   // Reset Button
@@ -632,6 +795,11 @@ async function exportAnimation() {
       saturation: getActualValue('saturationValue', 'saturation', '%'),
       hue: getActualValue('hueValue', 'hue', 'deg'),
       scale: getActualValue('videoScaleValue', 'videoScale', '%') / 100,
+      gradientSizeMultiplier: getActualValue('gradientSizeValue', 'gradientSize', '%') / 100,
+      gradientSizeMode: (() => {
+        const baseRadio = document.getElementById('gradientSizeModeBase');
+        return baseRadio && baseRadio.checked ? 'base' : 'drawing';
+      })(),
       positionX: getActualValue('positionXValue', 'positionX', '%') / 100,
       positionY: getActualValue('positionYValue', 'positionY', '%') / 100,
       blendMode: document.getElementById('blendMode').value,
@@ -672,6 +840,11 @@ async function exportAnimation() {
         }
         return 0;
       })(),
+      radialGradientsEnabled: document.getElementById('radialGradientsEnabled') ? document.getElementById('radialGradientsEnabled').checked : true,
+      lineGradientsEnabled: document.getElementById('lineGradientsEnabled') ? document.getElementById('lineGradientsEnabled').checked : false,
+      lineGradientAngle: getActualValue('lineGradientAngleValue', 'lineGradientAngle', '°'),
+      lineGradientLength: getActualValue('lineGradientLengthValue', 'lineGradientLength', 'px'),
+      lineGradientWidth: getActualValue('lineGradientWidthValue', 'lineGradientWidth', 'px'),
       
       // Color settings
       hueStart: getActualValue('hueStartValue', 'hueStart', '°'),
@@ -712,6 +885,8 @@ async function exportAnimation() {
       // Text settings
       textColor: document.getElementById('textColor').value,
       textBlendMode: document.getElementById('textBlendMode').value,
+      textMarkerEnabled: document.getElementById('textMarkerEnabled').checked,
+      textMarkerColor: document.getElementById('textMarkerColor').value,
       
       // Animation state (to preserve colors)
       initialTime: gradientAnimation ? gradientAnimation.time : 0
@@ -788,15 +963,17 @@ class GradientAnimation {
     this.gradients = [];
     this.time = 0;
     this.speed = 0.0005;
-    this.settings = {
+      this.settings = {
       opacity: 1, blur: 0, brightness: 100, contrast: 100, saturation: 100, hue: 0,
-      scale: 1, positionX: 0.5, positionY: 0.5, blendMode: 'normal',
+      scale: 1, gradientSizeMultiplier: 1.0, gradientSizeMode: 'base', positionX: 0.5, positionY: 0.5, blendMode: 'normal',
       gradientCount: 5, gradientSpeed: 0.5, colorIntensity: 0.6, backgroundColor: '#000000',
       gradientFade: 0.5, hueStart: 200, hueEnd: 280, hueSeparation: 100, evenlySpacedColors: true,
       saturationMin: 60, saturationMax: 100, lightnessMin: 20, lightnessMax: 50, colorMode: 'hue-range',
       paletteColors: ['#4a90e2', '#5ba3f5', '#6bb6ff', '#7bc9ff', '#8bdaff'],
       fadeoutMode: 'none', fadeoutTime: 10,
-      hueRotationSpeed: 0, animatedHue: 0
+      hueRotationSpeed: 0, animatedHue: 0,
+      radialGradientsEnabled: true, lineGradientsEnabled: false,
+      lineGradientAngle: 0, lineGradientLength: 200, lineGradientWidth: 100
     };
     this.fadeoutLastTime = Date.now();
     this.accumulatingBlendModes = ['lighten', 'screen', 'color-dodge', 'overlay', 'soft-light'];
@@ -821,11 +998,12 @@ class GradientAnimation {
   createGradients() {
     this.gradients = [];
     const count = this.settings.gradientCount;
+    const baseRadiusMultiplier = this.settings.gradientSizeMode === 'base' ? this.settings.gradientSizeMultiplier : 1.0;
     for (let i = 0; i < count; i++) {
       this.gradients.push({
         x: Math.random() * this.canvas.width,
         y: Math.random() * this.canvas.height,
-        radius: 200 + Math.random() * 400,
+        radius: (200 + Math.random() * 400) * baseRadiusMultiplier,
         vx: (Math.random() - 0.5) * 0.5,
         vy: (Math.random() - 0.5) * 0.5,
         color: this.generateColor(i),
@@ -959,22 +1137,59 @@ class GradientAnimation {
     } else {
       this.ctx.filter = 'none';
     }
+    const drawingMultiplier = this.settings.gradientSizeMode === 'drawing' ? this.settings.gradientSizeMultiplier : 1.0;
     this.gradients.forEach(gradient => {
-      const scaledRadius = gradient.radius * this.settings.scale;
-      const grad = this.ctx.createRadialGradient(gradient.x, gradient.y, 0, gradient.x, gradient.y, scaledRadius);
-      const colorMatch = gradient.color.match(/hsl\\((\\d+),\\s*(\\d+)%,\\s*(\\d+)%\\)/);
-      if (colorMatch) {
-        const [, h, s, l] = colorMatch;
-        const fadePoint = this.settings.gradientFade;
-        grad.addColorStop(0, \`hsla(\${h}, \${s}%, \${l}%, \${gradient.opacity})\`);
-        grad.addColorStop(fadePoint, \`hsla(\${h}, \${s}%, \${l}%, \${gradient.opacity * (1 - fadePoint)})\`);
-        grad.addColorStop(1, \`hsla(\${h}, \${s}%, \${l}%, 0)\`);
-      } else {
-        grad.addColorStop(0, gradient.color);
-        grad.addColorStop(1, 'transparent');
+      // Draw radial gradients if enabled
+      if (this.settings.radialGradientsEnabled) {
+        const scaledRadius = gradient.radius * this.settings.scale * drawingMultiplier;
+        const grad = this.ctx.createRadialGradient(gradient.x, gradient.y, 0, gradient.x, gradient.y, scaledRadius);
+        const colorMatch = gradient.color.match(/hsl\\((\\d+),\\s*(\\d+)%,\\s*(\\d+)%\\)/);
+        if (colorMatch) {
+          const [, h, s, l] = colorMatch;
+          const fadePoint = this.settings.gradientFade;
+          grad.addColorStop(0, \`hsla(\${h}, \${s}%, \${l}%, \${gradient.opacity})\`);
+          grad.addColorStop(fadePoint, \`hsla(\${h}, \${s}%, \${l}%, \${gradient.opacity * (1 - fadePoint)})\`);
+          grad.addColorStop(1, \`hsla(\${h}, \${s}%, \${l}%, 0)\`);
+        } else {
+          grad.addColorStop(0, gradient.color);
+          grad.addColorStop(1, 'transparent');
+        }
+        this.ctx.fillStyle = grad;
+        this.ctx.fillRect(0, 0, width, height);
       }
-      this.ctx.fillStyle = grad;
-      this.ctx.fillRect(0, 0, width, height);
+      
+      // Draw line gradients if enabled
+      if (this.settings.lineGradientsEnabled) {
+        const angle = (this.settings.lineGradientAngle * Math.PI) / 180;
+        const length = this.settings.lineGradientLength * drawingMultiplier;
+        const lineWidth = this.settings.lineGradientWidth * drawingMultiplier;
+        const halfLength = length / 2;
+        const halfWidth = lineWidth / 2;
+        const centerX = gradient.x;
+        const centerY = gradient.y;
+        const colorMatch = gradient.color.match(/hsl\\((\\d+),\\s*(\\d+)%,\\s*(\\d+)%\\)/);
+        const fadePoint = this.settings.gradientFade;
+        const maxRadius = Math.max(halfLength, halfWidth);
+        const scaleX = halfLength / maxRadius;
+        const scaleY = halfWidth / maxRadius;
+        this.ctx.save();
+        this.ctx.translate(centerX, centerY);
+        this.ctx.rotate(angle);
+        this.ctx.scale(scaleX, scaleY);
+        const lineGrad = this.ctx.createRadialGradient(0, 0, 0, 0, 0, maxRadius);
+        if (colorMatch) {
+          const [, h, s, l] = colorMatch;
+          lineGrad.addColorStop(0, \`hsla(\${h}, \${s}%, \${l}%, \${gradient.opacity})\`);
+          lineGrad.addColorStop(fadePoint, \`hsla(\${h}, \${s}%, \${l}%, \${gradient.opacity * (1 - fadePoint)})\`);
+          lineGrad.addColorStop(1, \`hsla(\${h}, \${s}%, \${l}%, 0)\`);
+        } else {
+          lineGrad.addColorStop(0, gradient.color);
+          lineGrad.addColorStop(1, 'transparent');
+        }
+        this.ctx.fillStyle = lineGrad;
+        this.ctx.fillRect(-maxRadius, -maxRadius, maxRadius * 2, maxRadius * 2);
+        this.ctx.restore();
+      }
     });
     this.ctx.filter = 'none';
     if (shouldFadeout) {
@@ -1015,6 +1230,10 @@ class GradientAnimation {
       this.createGradients();
     } else if (key === 'hueSeparation' || key === 'evenlySpacedColors') {
       this.createGradients();
+    } else if (key === 'gradientSizeMultiplier' || key === 'gradientSizeMode') {
+      if (key === 'gradientSizeMode' || (key === 'gradientSizeMultiplier' && this.settings.gradientSizeMode === 'base')) {
+        this.createGradients();
+      }
     } else if (key === 'fadeoutMode' || key === 'fadeoutTime') {
       this.fadeoutLastTime = Date.now();
     } else if (key === 'hueRotationSpeed') {
@@ -1055,7 +1274,7 @@ ${svgHTML}
 
   <!-- Sample Hero Content -->
   <main class="hero-content" style="color: ${settings.textColor}; mix-blend-mode: ${settings.textBlendMode};">
-    <h1>The backend to build the modern web.</h1>
+    <h1>${settings.textMarkerEnabled ? `<span style="display: inline; padding: 10px 20px; background-color: ${settings.textMarkerColor}; color: #fff; -webkit-box-decoration-break: clone; box-decoration-break: clone; margin-bottom: 0;">The backend to build the modern web.</span>` : 'The backend to build the modern web.'}</h1>
     <div class="button-group">
       <button class="primary-btn">
         <span class="default-label">$ npx create-payload-app</span>
@@ -1077,10 +1296,11 @@ ${jsContent}
       const animation = new GradientAnimation(canvas);
       // Apply all canvas settings
       const canvasSettings = ['opacity', 'blur', 'brightness', 'contrast', 'saturation', 'hue', 
-        'scale', 'positionX', 'positionY', 'blendMode', 'backgroundColor', 'gradientFade', 
+        'scale', 'gradientSizeMultiplier', 'gradientSizeMode', 'positionX', 'positionY', 'blendMode', 'backgroundColor', 'gradientFade', 
         'gradientCount', 'gradientSpeed', 'fadeoutMode', 'fadeoutTime', 'hueStart', 'hueEnd', 
         'hueSeparation', 'evenlySpacedColors', 'saturationMin', 'saturationMax', 'lightnessMin', 'lightnessMax', 'colorMode', 'paletteColors',
-        'hueRotationSpeed', 'animatedHue'];
+        'hueRotationSpeed', 'animatedHue', 'radialGradientsEnabled', 'lineGradientsEnabled', 
+        'lineGradientAngle', 'lineGradientLength', 'lineGradientWidth'];
       
       canvasSettings.forEach(key => {
         if (settings[key] !== undefined) {
@@ -1234,6 +1454,15 @@ document.addEventListener('DOMContentLoaded', () => {
           gradientAnimation.updateSetting('fadeoutTime', parseFloat(fadeoutTime.value));
         }
       }
+    }
+  }, 50);
+
+  // Initialize text marker visibility
+  setTimeout(() => {
+    const textMarkerEnabled = document.getElementById('textMarkerEnabled');
+    const textMarkerColorControl = document.getElementById('textMarkerColorControl');
+    if (textMarkerEnabled && textMarkerColorControl) {
+      textMarkerColorControl.style.display = textMarkerEnabled.checked ? 'block' : 'none';
     }
   }, 50);
 

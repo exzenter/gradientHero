@@ -19,6 +19,8 @@ class GradientAnimation {
       saturation: 100,
       hue: 0,
       scale: 1,
+      gradientSizeMultiplier: 1.0,
+      gradientSizeMode: 'base',
       positionX: 0.5,
       positionY: 0.5,
       blendMode: 'normal',
@@ -40,7 +42,12 @@ class GradientAnimation {
       colorMode: 'hue-range',
       paletteColors: ['#4a90e2', '#5ba3f5', '#6bb6ff', '#7bc9ff', '#8bdaff'],
       fadeoutMode: 'none',
-      fadeoutTime: 10
+      fadeoutTime: 10,
+      radialGradientsEnabled: true,
+      lineGradientsEnabled: false,
+      lineGradientAngle: 0,
+      lineGradientLength: 200,
+      lineGradientWidth: 100
     };
     
     // Fadeout tracking
@@ -74,11 +81,14 @@ class GradientAnimation {
     this.gradients = [];
     const count = this.settings.gradientCount;
     
+    // Apply multiplier to base radius if mode is 'base'
+    const baseRadiusMultiplier = this.settings.gradientSizeMode === 'base' ? this.settings.gradientSizeMultiplier : 1.0;
+    
     for (let i = 0; i < count; i++) {
       this.gradients.push({
         x: Math.random() * this.canvas.width,
         y: Math.random() * this.canvas.height,
-        radius: 200 + Math.random() * 400,
+        radius: (200 + Math.random() * 400) * baseRadiusMultiplier,
         vx: (Math.random() - 0.5) * 0.5,
         vy: (Math.random() - 0.5) * 0.5,
         color: this.generateColor(i),
@@ -292,29 +302,83 @@ class GradientAnimation {
     }
     
     // Draw gradients
+    // Apply multiplier during drawing if mode is 'drawing'
+    const drawingMultiplier = this.settings.gradientSizeMode === 'drawing' ? this.settings.gradientSizeMultiplier : 1.0;
+    
     this.gradients.forEach(gradient => {
-      const scaledRadius = gradient.radius * this.settings.scale;
-      const grad = this.ctx.createRadialGradient(
-        gradient.x, gradient.y, 0,
-        gradient.x, gradient.y, scaledRadius
-      );
-      
-      // Convert HSL to HSLA for opacity
-      const colorMatch = gradient.color.match(/hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)/);
-      if (colorMatch) {
-        const [, h, s, l] = colorMatch;
-        const fadePoint = this.settings.gradientFade; // 0-1, controls where the fade happens
+      // Draw radial gradients if enabled
+      if (this.settings.radialGradientsEnabled) {
+        const scaledRadius = gradient.radius * this.settings.scale * drawingMultiplier;
+        const grad = this.ctx.createRadialGradient(
+          gradient.x, gradient.y, 0,
+          gradient.x, gradient.y, scaledRadius
+        );
         
-        grad.addColorStop(0, `hsla(${h}, ${s}%, ${l}%, ${gradient.opacity})`);
-        grad.addColorStop(fadePoint, `hsla(${h}, ${s}%, ${l}%, ${gradient.opacity * (1 - fadePoint)})`);
-        grad.addColorStop(1, `hsla(${h}, ${s}%, ${l}%, 0)`);
-      } else {
-        grad.addColorStop(0, gradient.color);
-        grad.addColorStop(1, 'transparent');
+        // Convert HSL to HSLA for opacity
+        const colorMatch = gradient.color.match(/hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)/);
+        if (colorMatch) {
+          const [, h, s, l] = colorMatch;
+          const fadePoint = this.settings.gradientFade; // 0-1, controls where the fade happens
+          
+          grad.addColorStop(0, `hsla(${h}, ${s}%, ${l}%, ${gradient.opacity})`);
+          grad.addColorStop(fadePoint, `hsla(${h}, ${s}%, ${l}%, ${gradient.opacity * (1 - fadePoint)})`);
+          grad.addColorStop(1, `hsla(${h}, ${s}%, ${l}%, 0)`);
+        } else {
+          grad.addColorStop(0, gradient.color);
+          grad.addColorStop(1, 'transparent');
+        }
+        
+        this.ctx.fillStyle = grad;
+        this.ctx.fillRect(0, 0, width, height);
       }
       
-      this.ctx.fillStyle = grad;
-      this.ctx.fillRect(0, 0, width, height);
+      // Draw line gradients if enabled
+      if (this.settings.lineGradientsEnabled) {
+        const angle = (this.settings.lineGradientAngle * Math.PI) / 180;
+        const length = this.settings.lineGradientLength * drawingMultiplier;
+        const lineWidth = this.settings.lineGradientWidth * drawingMultiplier;
+        
+        // Calculate line gradient endpoints
+        const halfLength = length / 2;
+        const halfWidth = lineWidth / 2;
+        
+        // Center point of the line
+        const centerX = gradient.x;
+        const centerY = gradient.y;
+        
+        // Convert HSL to HSLA for opacity
+        const colorMatch = gradient.color.match(/hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)/);
+        const fadePoint = this.settings.gradientFade; // Use same fade point as radial gradients
+        
+        // Use a radial gradient but scale it to be elongated
+        // The radius will be half the length, and we'll scale it
+        const maxRadius = Math.max(halfLength, halfWidth);
+        const scaleX = halfLength / maxRadius;
+        const scaleY = halfWidth / maxRadius;
+        
+        this.ctx.save();
+        this.ctx.translate(centerX, centerY);
+        this.ctx.rotate(angle);
+        this.ctx.scale(scaleX, scaleY);
+        
+        // Create radial gradient (will be elongated by the scale transform)
+        const lineGrad = this.ctx.createRadialGradient(0, 0, 0, 0, 0, maxRadius);
+        
+        if (colorMatch) {
+          const [, h, s, l] = colorMatch;
+          lineGrad.addColorStop(0, `hsla(${h}, ${s}%, ${l}%, ${gradient.opacity})`);
+          lineGrad.addColorStop(fadePoint, `hsla(${h}, ${s}%, ${l}%, ${gradient.opacity * (1 - fadePoint)})`);
+          lineGrad.addColorStop(1, `hsla(${h}, ${s}%, ${l}%, 0)`);
+        } else {
+          lineGrad.addColorStop(0, gradient.color);
+          lineGrad.addColorStop(1, 'transparent');
+        }
+        
+        this.ctx.fillStyle = lineGrad;
+        // Draw a large enough rectangle to cover the scaled gradient
+        this.ctx.fillRect(-maxRadius, -maxRadius, maxRadius * 2, maxRadius * 2);
+        this.ctx.restore();
+      }
     });
     
     // Reset filter after drawing
@@ -377,6 +441,12 @@ class GradientAnimation {
     } else if (key === 'hueSeparation' || key === 'evenlySpacedColors') {
       // Regenerate gradients when hue separation settings change
       this.createGradients();
+    } else if (key === 'gradientSizeMultiplier' || key === 'gradientSizeMode') {
+      // Regenerate gradients when size multiplier or mode changes (affects base radius)
+      // If mode is 'base', we need to recreate. If mode is 'drawing', no recreation needed.
+      if (key === 'gradientSizeMode' || (key === 'gradientSizeMultiplier' && this.settings.gradientSizeMode === 'base')) {
+        this.createGradients();
+      }
     } else if (key.startsWith('hue') || key.startsWith('saturation') || key.startsWith('lightness')) {
       // Colors will update on next frame, no need to recreate
     } else if (key === 'fadeoutMode' || key === 'fadeoutTime') {

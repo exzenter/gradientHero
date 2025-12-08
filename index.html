@@ -43,6 +43,13 @@
         <div class="accordion-content">
         <div class="control-group">
           <label>
+            <input type="checkbox" id="radialGradientsEnabled" checked>
+            <span>Enable Radial Gradients</span>
+          </label>
+        </div>
+
+        <div class="control-group">
+          <label>
             <span>Gradient Opacity</span>
             <input type="text" class="value-display" id="videoOpacityValue" value="100%" data-unit="%" data-slider-id="videoOpacity">
           </label>
@@ -95,6 +102,30 @@
             <input type="text" class="value-display" id="videoScaleValue" value="100%" data-unit="%" data-slider-id="videoScale">
           </label>
           <input type="range" id="videoScale" min="50" max="200" value="100" class="slider">
+        </div>
+
+        <div class="control-group">
+          <label>
+            <span>Gradient Size</span>
+            <input type="text" class="value-display" id="gradientSizeValue" value="100%" data-unit="%" data-slider-id="gradientSize">
+          </label>
+          <input type="range" id="gradientSize" min="50" max="200" value="100" class="slider">
+        </div>
+
+        <div class="control-group">
+          <label>
+            <span>Gradient Size Mode</span>
+          </label>
+          <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem;">
+            <label style="display: flex; align-items: center; gap: 0.5rem;">
+              <input type="radio" name="gradientSizeMode" id="gradientSizeModeBase" value="base" checked>
+              <span>Apply to Base Radius</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.5rem;">
+              <input type="radio" name="gradientSizeMode" id="gradientSizeModeDrawing" value="drawing">
+              <span>Apply During Drawing</span>
+            </label>
+          </div>
         </div>
 
         <div class="control-group">
@@ -295,6 +326,46 @@
         </div>
       </section>
 
+      <!-- Line Gradients Controls -->
+      <section class="control-section">
+        <h3 class="accordion-header">
+          <span>Line Gradients</span>
+          <span class="accordion-icon">▼</span>
+        </h3>
+        <div class="accordion-content">
+        <div class="control-group">
+          <label>
+            <input type="checkbox" id="lineGradientsEnabled">
+            <span>Enable Line Gradients</span>
+          </label>
+        </div>
+
+        <div class="control-group">
+          <label>
+            <span>Line Gradient Angle</span>
+            <input type="text" class="value-display" id="lineGradientAngleValue" value="0°" data-unit="°" data-slider-id="lineGradientAngle">
+          </label>
+          <input type="range" id="lineGradientAngle" min="0" max="360" value="0" class="slider">
+        </div>
+
+        <div class="control-group">
+          <label>
+            <span>Line Gradient Length</span>
+            <input type="text" class="value-display" id="lineGradientLengthValue" value="200px" data-unit="px" data-slider-id="lineGradientLength">
+          </label>
+          <input type="range" id="lineGradientLength" min="50" max="1000" value="200" class="slider">
+        </div>
+
+        <div class="control-group">
+          <label>
+            <span>Line Gradient Width</span>
+            <input type="text" class="value-display" id="lineGradientWidthValue" value="100px" data-unit="px" data-slider-id="lineGradientWidth">
+          </label>
+          <input type="range" id="lineGradientWidth" min="20" max="500" value="100" class="slider">
+        </div>
+        </div>
+      </section>
+
       <!-- SVG Overlay Controls -->
       <section class="control-section">
         <h3 class="accordion-header">
@@ -417,6 +488,20 @@
             <option value="difference">Difference</option>
             <option value="exclusion">Exclusion</option>
           </select>
+        </div>
+
+        <div class="control-group">
+          <label>
+            <input type="checkbox" id="textMarkerEnabled">
+            <span>Enable Background Marker</span>
+          </label>
+        </div>
+
+        <div class="control-group" id="textMarkerColorControl" style="display: none;">
+          <label>
+            <span>Marker Background Color</span>
+          </label>
+          <input type="color" id="textMarkerColor" value="#b60011" class="color-picker">
         </div>
 
         <div class="control-group">
