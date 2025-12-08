@@ -336,12 +336,26 @@ html, body {
 .value-display {
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.6);
-  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   padding: 0.2rem 0.45rem;
   border-radius: 4px;
   min-width: 55px;
   text-align: right;
+  cursor: text;
+  transition: all 0.2s ease;
+}
+
+.value-display:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.value-display:focus {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.4);
+  outline: none;
 }
 
 /* Slider Styles */
@@ -405,6 +419,12 @@ html, body {
 
 .select-control:focus {
   border-color: rgba(255, 255, 255, 0.3);
+}
+
+.select-control option {
+  background: #1a1a1a;
+  color: #fff;
+  padding: 0.5rem;
 }
 
 /* Color Picker */

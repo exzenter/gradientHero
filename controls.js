@@ -92,11 +92,55 @@ const defaults = {
 // Initialize controls
 function initControls() {
   // Canvas Opacity
+  // Helper function to sync value input with slider
+  function setupValueInput(valueInput, slider, unit, updateCallback, parseValue = (v) => parseFloat(v)) {
+    // Update input from slider
+    slider.addEventListener('input', (e) => {
+      const value = e.target.value;
+      valueInput.value = value + unit;
+      if (updateCallback) {
+        updateCallback(parseValue(value));
+      }
+    });
+
+    // Update slider from input (allow any value, not just slider range)
+    valueInput.addEventListener('input', (e) => {
+      let inputValue = e.target.value;
+      // Remove unit if present
+      if (unit) {
+        inputValue = inputValue.replace(unit, '').trim();
+      }
+      const numValue = parseFloat(inputValue);
+      if (!isNaN(numValue)) {
+        // Update slider if within range, but still apply the value
+        const sliderMin = parseFloat(slider.min) || 0;
+        const sliderMax = parseFloat(slider.max) || 100;
+        if (numValue >= sliderMin && numValue <= sliderMax) {
+          slider.value = numValue;
+        }
+        // Always update the actual setting, even if outside slider range
+        if (updateCallback) {
+          updateCallback(parseValue(numValue));
+        }
+      }
+    });
+
+    // Format on blur
+    valueInput.addEventListener('blur', (e) => {
+      let inputValue = e.target.value;
+      if (unit) {
+        inputValue = inputValue.replace(unit, '').trim();
+      }
+      const numValue = parseFloat(inputValue);
+      if (!isNaN(numValue)) {
+        e.target.value = numValue + unit;
+      }
+    });
+  }
+
   const videoOpacity = document.getElementById('videoOpacity');
   const videoOpacityValue = document.getElementById('videoOpacityValue');
-  videoOpacity.addEventListener('input', (e) => {
-    const value = e.target.value;
-    videoOpacityValue.textContent = value + '%';
+  setupValueInput(videoOpacityValue, videoOpacity, '%', (value) => {
     if (gradientAnimation) {
       gradientAnimation.updateSetting('opacity', value / 100);
     }
@@ -105,64 +149,52 @@ function initControls() {
   // Canvas Blur
   const videoBlur = document.getElementById('videoBlur');
   const videoBlurValue = document.getElementById('videoBlurValue');
-  videoBlur.addEventListener('input', (e) => {
-    const value = e.target.value;
-    videoBlurValue.textContent = value + 'px';
+  setupValueInput(videoBlurValue, videoBlur, 'px', (value) => {
     if (gradientAnimation) {
-      gradientAnimation.updateSetting('blur', parseFloat(value));
+      gradientAnimation.updateSetting('blur', value);
     }
   });
 
   // Brightness
   const brightness = document.getElementById('brightness');
   const brightnessValue = document.getElementById('brightnessValue');
-  brightness.addEventListener('input', (e) => {
-    const value = e.target.value;
-    brightnessValue.textContent = value + '%';
+  setupValueInput(brightnessValue, brightness, '%', (value) => {
     if (gradientAnimation) {
-      gradientAnimation.updateSetting('brightness', parseFloat(value));
+      gradientAnimation.updateSetting('brightness', value);
     }
   });
 
   // Contrast
   const contrast = document.getElementById('contrast');
   const contrastValue = document.getElementById('contrastValue');
-  contrast.addEventListener('input', (e) => {
-    const value = e.target.value;
-    contrastValue.textContent = value + '%';
+  setupValueInput(contrastValue, contrast, '%', (value) => {
     if (gradientAnimation) {
-      gradientAnimation.updateSetting('contrast', parseFloat(value));
+      gradientAnimation.updateSetting('contrast', value);
     }
   });
 
   // Saturation
   const saturation = document.getElementById('saturation');
   const saturationValue = document.getElementById('saturationValue');
-  saturation.addEventListener('input', (e) => {
-    const value = e.target.value;
-    saturationValue.textContent = value + '%';
+  setupValueInput(saturationValue, saturation, '%', (value) => {
     if (gradientAnimation) {
-      gradientAnimation.updateSetting('saturation', parseFloat(value));
+      gradientAnimation.updateSetting('saturation', value);
     }
   });
 
   // Hue
   const hue = document.getElementById('hue');
   const hueValue = document.getElementById('hueValue');
-  hue.addEventListener('input', (e) => {
-    const value = e.target.value;
-    hueValue.textContent = value + 'deg';
+  setupValueInput(hueValue, hue, 'deg', (value) => {
     if (gradientAnimation) {
-      gradientAnimation.updateSetting('hue', parseFloat(value));
+      gradientAnimation.updateSetting('hue', value);
     }
   });
 
   // Canvas Scale
   const videoScale = document.getElementById('videoScale');
   const videoScaleValue = document.getElementById('videoScaleValue');
-  videoScale.addEventListener('input', (e) => {
-    const value = e.target.value;
-    videoScaleValue.textContent = value + '%';
+  setupValueInput(videoScaleValue, videoScale, '%', (value) => {
     if (gradientAnimation) {
       gradientAnimation.updateSetting('scale', value / 100);
       canvas.style.transform = `scale(${value / 100})`;
@@ -172,9 +204,7 @@ function initControls() {
   // Position X
   const positionX = document.getElementById('positionX');
   const positionXValue = document.getElementById('positionXValue');
-  positionX.addEventListener('input', (e) => {
-    const value = e.target.value;
-    positionXValue.textContent = value + '%';
+  setupValueInput(positionXValue, positionX, '%', (value) => {
     if (gradientAnimation) {
       gradientAnimation.updateSetting('positionX', value / 100);
     }
@@ -183,9 +213,7 @@ function initControls() {
   // Position Y
   const positionY = document.getElementById('positionY');
   const positionYValue = document.getElementById('positionYValue');
-  positionY.addEventListener('input', (e) => {
-    const value = e.target.value;
-    positionYValue.textContent = value + '%';
+  setupValueInput(positionYValue, positionY, '%', (value) => {
     if (gradientAnimation) {
       gradientAnimation.updateSetting('positionY', value / 100);
     }
@@ -223,43 +251,58 @@ function initControls() {
 
   fadeoutMode.addEventListener('change', updateFadeoutMode);
 
-  // Fadeout Time
-  fadeoutTime.addEventListener('input', (e) => {
-    const value = e.target.value;
-    fadeoutTimeValue.textContent = value + 's';
+  // Fadeout Time (already declared above, just setup the input)
+  setupValueInput(fadeoutTimeValue, fadeoutTime, 's', (value) => {
     if (gradientAnimation) {
-      gradientAnimation.updateSetting('fadeoutTime', parseFloat(value));
+      gradientAnimation.updateSetting('fadeoutTime', value);
     }
   });
 
   // Gradient Count
   const gradientCount = document.getElementById('gradientCount');
   const gradientCountValue = document.getElementById('gradientCountValue');
-  gradientCount.addEventListener('input', (e) => {
-    const value = e.target.value;
-    gradientCountValue.textContent = value;
+  setupValueInput(gradientCountValue, gradientCount, '', (value) => {
     if (gradientAnimation) {
       gradientAnimation.updateSetting('gradientCount', parseInt(value));
     }
-  });
+  }, (v) => parseInt(v));
 
   // Animation Speed
   const animationSpeed = document.getElementById('animationSpeed');
   const animationSpeedValue = document.getElementById('animationSpeedValue');
+  // Custom handler for animation speed (displays as decimal)
   animationSpeed.addEventListener('input', (e) => {
     const value = e.target.value;
-    animationSpeedValue.textContent = (value / 100).toFixed(2);
+    animationSpeedValue.value = (value / 100).toFixed(2);
     if (gradientAnimation) {
       gradientAnimation.updateSetting('gradientSpeed', value / 100);
+    }
+  });
+  animationSpeedValue.addEventListener('input', (e) => {
+    let inputValue = parseFloat(e.target.value);
+    if (!isNaN(inputValue)) {
+      const sliderValue = inputValue * 100;
+      const sliderMin = parseFloat(animationSpeed.min) || 0;
+      const sliderMax = parseFloat(animationSpeed.max) || 1000;
+      if (sliderValue >= sliderMin && sliderValue <= sliderMax) {
+        animationSpeed.value = sliderValue;
+      }
+      if (gradientAnimation) {
+        gradientAnimation.updateSetting('gradientSpeed', inputValue);
+      }
+    }
+  });
+  animationSpeedValue.addEventListener('blur', (e) => {
+    const numValue = parseFloat(e.target.value);
+    if (!isNaN(numValue)) {
+      e.target.value = numValue.toFixed(2);
     }
   });
 
   // Gradient Fade
   const gradientFade = document.getElementById('gradientFade');
   const gradientFadeValue = document.getElementById('gradientFadeValue');
-  gradientFade.addEventListener('input', (e) => {
-    const value = e.target.value;
-    gradientFadeValue.textContent = value + '%';
+  setupValueInput(gradientFadeValue, gradientFade, '%', (value) => {
     if (gradientAnimation) {
       gradientAnimation.updateSetting('gradientFade', value / 100);
     }
@@ -276,61 +319,49 @@ function initControls() {
   // Gradient Color Controls
   const hueStart = document.getElementById('hueStart');
   const hueStartValue = document.getElementById('hueStartValue');
-  hueStart.addEventListener('input', (e) => {
-    const value = e.target.value;
-    hueStartValue.textContent = value + '°';
+  setupValueInput(hueStartValue, hueStart, '°', (value) => {
     if (gradientAnimation) {
-      gradientAnimation.updateSetting('hueStart', parseFloat(value));
+      gradientAnimation.updateSetting('hueStart', value);
     }
   });
 
   const hueEnd = document.getElementById('hueEnd');
   const hueEndValue = document.getElementById('hueEndValue');
-  hueEnd.addEventListener('input', (e) => {
-    const value = e.target.value;
-    hueEndValue.textContent = value + '°';
+  setupValueInput(hueEndValue, hueEnd, '°', (value) => {
     if (gradientAnimation) {
-      gradientAnimation.updateSetting('hueEnd', parseFloat(value));
+      gradientAnimation.updateSetting('hueEnd', value);
     }
   });
 
   const saturationMin = document.getElementById('saturationMin');
   const saturationMinValue = document.getElementById('saturationMinValue');
-  saturationMin.addEventListener('input', (e) => {
-    const value = e.target.value;
-    saturationMinValue.textContent = value + '%';
+  setupValueInput(saturationMinValue, saturationMin, '%', (value) => {
     if (gradientAnimation) {
-      gradientAnimation.updateSetting('saturationMin', parseFloat(value));
+      gradientAnimation.updateSetting('saturationMin', value);
     }
   });
 
   const saturationMax = document.getElementById('saturationMax');
   const saturationMaxValue = document.getElementById('saturationMaxValue');
-  saturationMax.addEventListener('input', (e) => {
-    const value = e.target.value;
-    saturationMaxValue.textContent = value + '%';
+  setupValueInput(saturationMaxValue, saturationMax, '%', (value) => {
     if (gradientAnimation) {
-      gradientAnimation.updateSetting('saturationMax', parseFloat(value));
+      gradientAnimation.updateSetting('saturationMax', value);
     }
   });
 
   const lightnessMin = document.getElementById('lightnessMin');
   const lightnessMinValue = document.getElementById('lightnessMinValue');
-  lightnessMin.addEventListener('input', (e) => {
-    const value = e.target.value;
-    lightnessMinValue.textContent = value + '%';
+  setupValueInput(lightnessMinValue, lightnessMin, '%', (value) => {
     if (gradientAnimation) {
-      gradientAnimation.updateSetting('lightnessMin', parseFloat(value));
+      gradientAnimation.updateSetting('lightnessMin', value);
     }
   });
 
   const lightnessMax = document.getElementById('lightnessMax');
   const lightnessMaxValue = document.getElementById('lightnessMaxValue');
-  lightnessMax.addEventListener('input', (e) => {
-    const value = e.target.value;
-    lightnessMaxValue.textContent = value + '%';
+  setupValueInput(lightnessMaxValue, lightnessMax, '%', (value) => {
     if (gradientAnimation) {
-      gradientAnimation.updateSetting('lightnessMax', parseFloat(value));
+      gradientAnimation.updateSetting('lightnessMax', value);
     }
   });
 
@@ -407,9 +438,28 @@ function initControls() {
   function updateSVGOverlay() {
     if (svgPatternGenerator) {
       const enabled = svgEnabled.checked;
-      const opacity = parseFloat(svgOpacity.value);
-      const size = parseFloat(svgSize.value);
-      const strokeWidth = parseFloat(svgStrokeWidth.value);
+      // Parse values from inputs, handling units from text inputs
+      let opacity = parseFloat(svgOpacity.value);
+      let size = parseFloat(svgSize.value);
+      let strokeWidth = parseFloat(svgStrokeWidth.value);
+      
+      // If values come from text inputs, extract numbers
+      if (svgOpacityValue && svgOpacityValue.value) {
+        const opacityStr = svgOpacityValue.value.replace('%', '').trim();
+        const opacityNum = parseFloat(opacityStr);
+        if (!isNaN(opacityNum)) opacity = opacityNum;
+      }
+      if (svgSizeValue && svgSizeValue.value) {
+        const sizeStr = svgSizeValue.value.replace('px', '').trim();
+        const sizeNum = parseFloat(sizeStr);
+        if (!isNaN(sizeNum)) size = sizeNum;
+      }
+      if (svgStrokeWidthValue && svgStrokeWidthValue.value) {
+        const strokeStr = svgStrokeWidthValue.value.replace('px', '').trim();
+        const strokeNum = parseFloat(strokeStr);
+        if (!isNaN(strokeNum)) strokeWidth = strokeNum;
+      }
+      
       const pattern = svgPattern.value;
       const color = svgColor.value;
       const blendMode = svgBlendMode.value;
@@ -420,20 +470,38 @@ function initControls() {
   }
 
   svgEnabled.addEventListener('change', updateSVGOverlay);
-  svgOpacity.addEventListener('input', (e) => {
-    const value = e.target.value;
-    svgOpacityValue.textContent = value + '%';
+  setupValueInput(svgOpacityValue, svgOpacity, '%', () => {
     updateSVGOverlay();
   });
-  svgSize.addEventListener('input', (e) => {
-    const value = e.target.value;
-    svgSizeValue.textContent = value + 'px';
+  setupValueInput(svgSizeValue, svgSize, 'px', () => {
     updateSVGOverlay();
   });
+  // Custom handler for stroke width (displays with 1 decimal)
   svgStrokeWidth.addEventListener('input', (e) => {
     const value = e.target.value;
-    svgStrokeWidthValue.textContent = parseFloat(value).toFixed(1) + 'px';
+    svgStrokeWidthValue.value = parseFloat(value).toFixed(1) + 'px';
     updateSVGOverlay();
+  });
+  svgStrokeWidthValue.addEventListener('input', (e) => {
+    let inputValue = e.target.value;
+    inputValue = inputValue.replace('px', '').trim();
+    const numValue = parseFloat(inputValue);
+    if (!isNaN(numValue)) {
+      const sliderMin = parseFloat(svgStrokeWidth.min) || 0.1;
+      const sliderMax = parseFloat(svgStrokeWidth.max) || 5;
+      if (numValue >= sliderMin && numValue <= sliderMax) {
+        svgStrokeWidth.value = numValue;
+      }
+      updateSVGOverlay();
+    }
+  });
+  svgStrokeWidthValue.addEventListener('blur', (e) => {
+    let inputValue = e.target.value;
+    inputValue = inputValue.replace('px', '').trim();
+    const numValue = parseFloat(inputValue);
+    if (!isNaN(numValue)) {
+      e.target.value = numValue.toFixed(1) + 'px';
+    }
   });
   svgPattern.addEventListener('change', updateSVGOverlay);
   svgColor.addEventListener('input', updateSVGOverlay);
@@ -482,9 +550,7 @@ function initControls() {
 
   gradientStart.addEventListener('input', updateGradient);
   gradientEnd.addEventListener('input', updateGradient);
-  gradientAngle.addEventListener('input', (e) => {
-    const value = e.target.value;
-    gradientAngleValue.textContent = value + 'deg';
+  setupValueInput(gradientAngleValue, gradientAngle, 'deg', () => {
     updateGradient();
   });
 
