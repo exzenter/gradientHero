@@ -461,6 +461,13 @@ function initControls() {
       const color = svgColor.value;
       const blendMode = svgBlendMode.value;
 
+      // Update container opacity to match the setting
+      const svgOverlayContainer = document.getElementById('svgOverlay');
+      if (svgOverlayContainer) {
+        svgOverlayContainer.style.opacity = opacity / 100;
+        svgOverlayContainer.style.mixBlendMode = blendMode;
+      }
+
       svgPatternGenerator.setEnabled(enabled);
       svgPatternGenerator.updatePattern(pattern, size, opacity, color, blendMode, strokeWidth);
     }
@@ -538,40 +545,69 @@ function initControls() {
   });
 }
 
+// Helper function to get actual value from text input or slider
+function getActualValue(textInputId, sliderId, unit = '') {
+  const textInput = document.getElementById(textInputId);
+  const slider = document.getElementById(sliderId);
+  
+  if (textInput && textInput.value) {
+    let value = textInput.value;
+    if (unit) {
+      value = value.replace(unit, '').trim();
+    }
+    const numValue = parseFloat(value);
+    if (!isNaN(numValue)) {
+      return numValue;
+    }
+  }
+  
+  // Fallback to slider
+  if (slider) {
+    return parseFloat(slider.value);
+  }
+  
+  return 0;
+}
+
 // Export function to create standalone HTML file
 async function exportAnimation() {
   const exportBtn = document.getElementById('exportAnimation');
   try {
-    // Collect all current settings
+    // Collect all current settings - use text inputs when available (they reflect actual values)
     const settings = {
       // Canvas settings
-      opacity: parseFloat(document.getElementById('videoOpacity').value) / 100,
-      blur: parseFloat(document.getElementById('videoBlur').value),
-      brightness: parseFloat(document.getElementById('brightness').value),
-      contrast: parseFloat(document.getElementById('contrast').value),
-      saturation: parseFloat(document.getElementById('saturation').value),
-      hue: parseFloat(document.getElementById('hue').value),
-      scale: parseFloat(document.getElementById('videoScale').value) / 100,
-      positionX: parseFloat(document.getElementById('positionX').value) / 100,
-      positionY: parseFloat(document.getElementById('positionY').value) / 100,
+      opacity: getActualValue('videoOpacityValue', 'videoOpacity', '%') / 100,
+      blur: getActualValue('videoBlurValue', 'videoBlur', 'px'),
+      brightness: getActualValue('brightnessValue', 'brightness', '%'),
+      contrast: getActualValue('contrastValue', 'contrast', '%'),
+      saturation: getActualValue('saturationValue', 'saturation', '%'),
+      hue: getActualValue('hueValue', 'hue', 'deg'),
+      scale: getActualValue('videoScaleValue', 'videoScale', '%') / 100,
+      positionX: getActualValue('positionXValue', 'positionX', '%') / 100,
+      positionY: getActualValue('positionYValue', 'positionY', '%') / 100,
       blendMode: document.getElementById('blendMode').value,
       backgroundColor: document.getElementById('canvasBgColor').value,
-      gradientFade: parseFloat(document.getElementById('gradientFade').value) / 100,
-      gradientCount: parseInt(document.getElementById('gradientCount').value),
-      gradientSpeed: parseFloat(document.getElementById('animationSpeed').value) / 100,
-      fadeoutMode: document.getElementById('fadeoutMode').value,
-      fadeoutTime: (() => {
-        const el = document.getElementById('fadeoutTime');
-        return el ? parseFloat(el.value) : 10;
+      gradientFade: getActualValue('gradientFadeValue', 'gradientFade', '%') / 100,
+      gradientCount: getActualValue('gradientCountValue', 'gradientCount', ''),
+      gradientSpeed: (() => {
+        const el = document.getElementById('animationSpeedValue');
+        if (el && el.value) {
+          const val = parseFloat(el.value);
+          if (!isNaN(val)) return val;
+        }
+        const slider = document.getElementById('animationSpeed');
+        return slider ? parseFloat(slider.value) / 100 : 0.5;
       })(),
+      fadeoutMode: document.getElementById('fadeoutMode').value,
+      fadeoutTime: getActualValue('fadeoutTimeValue', 'fadeoutTime', 's'),
       
       // Color settings
-      hueStart: parseFloat(document.getElementById('hueStart').value),
-      hueEnd: parseFloat(document.getElementById('hueEnd').value),
-      saturationMin: parseFloat(document.getElementById('saturationMin').value),
-      saturationMax: parseFloat(document.getElementById('saturationMax').value),
-      lightnessMin: parseFloat(document.getElementById('lightnessMin').value),
-      lightnessMax: parseFloat(document.getElementById('lightnessMax').value),
+      hueStart: getActualValue('hueStartValue', 'hueStart', '°'),
+      hueEnd: getActualValue('hueEndValue', 'hueEnd', '°'),
+      saturationMin: getActualValue('saturationMinValue', 'saturationMin', '%'),
+      saturationMax: getActualValue('saturationMaxValue', 'saturationMax', '%'),
+      lightnessMin: getActualValue('lightnessMinValue', 'lightnessMin', '%'),
+      lightnessMax: getActualValue('lightnessMaxValue', 'lightnessMax', '%'),
       colorMode: document.getElementById('colorMode').value,
       paletteColors: [
         document.getElementById('paletteColor1').value,
@@ -581,16 +617,25 @@ async function exportAnimation() {
         document.getElementById('paletteColor5').value
       ],
       
-      // SVG settings
+      // SVG settings - read from text inputs to get actual values
       svgEnabled: document.getElementById('svgEnabled').checked,
-      svgOpacity: parseFloat(document.getElementById('svgOpacity').value),
-      svgSize: parseFloat(document.getElementById('svgSize').value),
-      svgStrokeWidth: parseFloat(document.getElementById('svgStrokeWidth').value),
+      svgOpacity: getActualValue('svgOpacityValue', 'svgOpacity', '%'),
+      svgSize: getActualValue('svgSizeValue', 'svgSize', 'px'),
+      svgStrokeWidth: (() => {
+        const el = document.getElementById('svgStrokeWidthValue');
+        if (el && el.value) {
+          const val = el.value.replace('px', '').trim();
+          const numVal = parseFloat(val);
+          if (!isNaN(numVal)) return numVal;
+        }
+        const slider = document.getElementById('svgStrokeWidth');
+        return slider ? parseFloat(slider.value) : 1;
+      })(),
       svgPattern: document.getElementById('svgPattern').value,
       svgColor: document.getElementById('svgColor').value,
       svgBlendMode: document.getElementById('svgBlendMode').value,
       
-      // Background settings
+      // Text settings
       textColor: document.getElementById('textColor').value,
       textBlendMode: document.getElementById('textBlendMode').value
     };
@@ -935,6 +980,21 @@ ${jsContent}
           animation.updateSetting(key, settings[key]);
         }
       });
+    }
+    
+    // Initialize SVG pattern generator with exported settings
+    const svgOverlay = document.getElementById('svgOverlay');
+    if (svgOverlay && typeof SVGPatternGenerator !== 'undefined') {
+      const svgPatternGenerator = new SVGPatternGenerator(svgOverlay);
+      svgPatternGenerator.setEnabled(settings.svgEnabled);
+      svgPatternGenerator.updatePattern(
+        settings.svgPattern,
+        settings.svgSize,
+        settings.svgOpacity,
+        settings.svgColor,
+        settings.svgBlendMode,
+        settings.svgStrokeWidth
+      );
     }
   });
 })();
