@@ -1,5 +1,7 @@
 # gradientHero
 
+**[🌐 Live Demo](https://exzenter.github.io/gradientHero/)**
+
 An animated, customizable gradient hero background built with HTML5 Canvas. Features real-time controls for colors, effects, SVG patterns, and blend modes.
 
 ## Features
