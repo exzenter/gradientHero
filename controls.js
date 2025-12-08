@@ -17,6 +17,26 @@ if (heroExportBtn) {
   });
 }
 
+// Accordion functionality
+document.addEventListener('DOMContentLoaded', () => {
+  const accordionHeaders = document.querySelectorAll('.accordion-header');
+  
+  accordionHeaders.forEach(header => {
+    header.addEventListener('click', () => {
+      const section = header.closest('.control-section');
+      section.classList.toggle('collapsed');
+    });
+  });
+  
+  // Optionally, collapse all sections by default except the first one
+  const sections = document.querySelectorAll('.control-section');
+  sections.forEach((section, index) => {
+    if (index > 0) {
+      section.classList.add('collapsed');
+    }
+  });
+});
+
 closeControls.addEventListener('click', () => {
   controlsOverlay.classList.remove('active');
 });

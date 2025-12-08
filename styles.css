@@ -225,7 +225,7 @@ html, body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.5rem;
+  padding: 1rem 1.25rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   position: sticky;
   top: 0;
@@ -234,7 +234,7 @@ html, body {
 }
 
 .controls-header h2 {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 600;
   margin: 0;
 }
@@ -259,12 +259,11 @@ html, body {
 }
 
 .controls-content {
-  padding: 1.5rem;
+  padding: 1rem 1.25rem;
 }
 
 .control-section {
-  margin-bottom: 2rem;
-  padding-bottom: 2rem;
+  margin-bottom: 0.75rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -272,23 +271,58 @@ html, body {
   border-bottom: none;
 }
 
-.control-section h3 {
-  font-size: 1.1rem;
+.accordion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.95rem;
   font-weight: 600;
-  margin-bottom: 1rem;
+  margin: 0;
+  padding: 0.75rem 0;
   color: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.2s ease;
+}
+
+.accordion-header:hover {
+  color: rgba(255, 255, 255, 1);
+}
+
+.accordion-icon {
+  font-size: 0.75rem;
+  transition: transform 0.3s ease;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.control-section.collapsed .accordion-icon {
+  transform: rotate(-90deg);
+}
+
+.accordion-content {
+  max-height: 2000px;
+  overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.2s ease;
+  opacity: 1;
+}
+
+.control-section.collapsed .accordion-content {
+  max-height: 0;
+  opacity: 0;
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
 .control-group {
-  margin-bottom: 1.25rem;
+  margin-bottom: 0.875rem;
 }
 
 .control-group label {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.5rem;
-  font-size: 0.9rem;
+  margin-bottom: 0.375rem;
+  font-size: 0.85rem;
   color: rgba(255, 255, 255, 0.8);
 }
 
@@ -301,19 +335,19 @@ html, body {
 
 .value-display {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: rgba(255, 255, 255, 0.6);
   background: rgba(255, 255, 255, 0.05);
-  padding: 0.25rem 0.5rem;
+  padding: 0.2rem 0.45rem;
   border-radius: 4px;
-  min-width: 60px;
+  min-width: 55px;
   text-align: right;
 }
 
 /* Slider Styles */
 .slider {
   width: 100%;
-  height: 6px;
+  height: 5px;
   border-radius: 3px;
   background: rgba(255, 255, 255, 0.1);
   outline: none;
@@ -325,8 +359,8 @@ html, body {
 .slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
   background: #fff;
   cursor: pointer;
@@ -338,8 +372,8 @@ html, body {
 }
 
 .slider::-moz-range-thumb {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
   background: #fff;
   cursor: pointer;
@@ -354,12 +388,12 @@ html, body {
 /* Select Control */
 .select-control {
   width: 100%;
-  padding: 0.75rem;
+  padding: 0.625rem;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 4px;
   color: #fff;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   cursor: pointer;
   outline: none;
   transition: border-color 0.2s ease;
@@ -376,7 +410,7 @@ html, body {
 /* Color Picker */
 .color-picker {
   width: 100%;
-  height: 40px;
+  height: 36px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 4px;
   cursor: pointer;
@@ -413,19 +447,19 @@ html, body {
 
 /* Reset Button */
 .control-actions {
-  margin-top: 2rem;
-  padding-top: 1.5rem;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .reset-btn {
   width: 100%;
-  padding: 0.875rem 1.5rem;
+  padding: 0.75rem 1.25rem;
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 4px;
   color: #fff;
-  font-size: 0.95rem;
+  font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -442,12 +476,12 @@ html, body {
 
 .export-btn {
   width: 100%;
-  padding: 0.875rem 1.5rem;
+  padding: 0.75rem 1.25rem;
   background: rgba(34, 197, 94, 0.2);
   border: 1px solid rgba(34, 197, 94, 0.4);
   border-radius: 4px;
   color: #fff;
-  font-size: 0.95rem;
+  font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;

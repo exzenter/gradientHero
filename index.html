@@ -36,8 +36,11 @@
     <div class="controls-content">
       <!-- Canvas Gradient Controls -->
       <section class="control-section">
-        <h3>Canvas Gradient Settings</h3>
-        
+        <h3 class="accordion-header">
+          <span>Canvas Gradient Settings</span>
+          <span class="accordion-icon">▼</span>
+        </h3>
+        <div class="accordion-content">
         <div class="control-group">
           <label>
             <span>Gradient Opacity</span>
@@ -179,12 +182,16 @@
           </label>
           <input type="range" id="gradientFade" min="0" max="100" value="50" class="slider">
         </div>
+        </div>
       </section>
 
       <!-- Gradient Color Controls -->
       <section class="control-section">
-        <h3>Gradient Colors</h3>
-        
+        <h3 class="accordion-header">
+          <span>Gradient Colors</span>
+          <span class="accordion-icon">▼</span>
+        </h3>
+        <div class="accordion-content">
         <div class="control-group">
           <label>
             <span>Base Hue Start</span>
@@ -277,12 +284,16 @@
           </label>
           <input type="color" id="paletteColor5" value="#8bdaff" class="color-picker">
         </div>
+        </div>
       </section>
 
       <!-- SVG Overlay Controls -->
       <section class="control-section">
-        <h3>SVG Pattern Overlay</h3>
-        
+        <h3 class="accordion-header">
+          <span>SVG Pattern Overlay</span>
+          <span class="accordion-icon">▼</span>
+        </h3>
+        <div class="accordion-content">
         <div class="control-group">
           <label>
             <input type="checkbox" id="svgEnabled" checked>
@@ -363,12 +374,16 @@
             <option value="exclusion">Exclusion</option>
           </select>
         </div>
+        </div>
       </section>
 
       <!-- Background Controls -->
       <section class="control-section">
-        <h3>Background</h3>
-        
+        <h3 class="accordion-header">
+          <span>Background</span>
+          <span class="accordion-icon">▼</span>
+        </h3>
+        <div class="accordion-content">
         <div class="control-group">
           <label>
             <span>Background Color</span>
@@ -403,6 +418,7 @@
             <span class="value-display" id="gradientAngleValue">180deg</span>
           </label>
           <input type="range" id="gradientAngle" min="0" max="360" value="180" class="slider">
+        </div>
         </div>
       </section>
 
