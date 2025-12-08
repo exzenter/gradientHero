@@ -75,11 +75,8 @@ const defaults = {
   paletteColor3: '#6bb6ff',
   paletteColor4: '#7bc9ff',
   paletteColor5: '#8bdaff',
-  bgColor: '#000000',
-  gradientOverlay: false,
-  gradientStart: '#000000',
-  gradientEnd: '#000000',
-  gradientAngle: 180,
+  textColor: '#ffffff',
+  textBlendMode: 'normal',
   svgEnabled: true,
   svgOpacity: 15,
   svgSize: 100,
@@ -507,52 +504,26 @@ function initControls() {
   svgColor.addEventListener('input', updateSVGOverlay);
   svgBlendMode.addEventListener('change', updateSVGOverlay);
 
-  // Background Color
-  const bgColor = document.getElementById('bgColor');
-  bgColor.addEventListener('input', (e) => {
-    bgWrapper.style.backgroundColor = e.target.value;
-  });
+  // Text Controls
+  const heroContent = document.querySelector('.hero-content');
+  const textColor = document.getElementById('textColor');
+  const textBlendMode = document.getElementById('textBlendMode');
 
-  // Gradient Overlay
-  const gradientOverlay = document.getElementById('gradientOverlay');
-  const gradientControls = document.getElementById('gradientControls');
-  const gradientControls2 = document.getElementById('gradientControls2');
-  const gradientControls3 = document.getElementById('gradientControls3');
-  
-  gradientOverlay.addEventListener('change', (e) => {
-    if (e.target.checked) {
-      gradientControls.style.display = 'block';
-      gradientControls2.style.display = 'block';
-      gradientControls3.style.display = 'block';
-      updateGradient();
-    } else {
-      gradientControls.style.display = 'none';
-      gradientControls2.style.display = 'none';
-      gradientControls3.style.display = 'none';
-      bgWrapper.style.backgroundImage = '';
-    }
-  });
-
-  // Gradient Colors and Angle
-  const gradientStart = document.getElementById('gradientStart');
-  const gradientEnd = document.getElementById('gradientEnd');
-  const gradientAngle = document.getElementById('gradientAngle');
-  const gradientAngleValue = document.getElementById('gradientAngleValue');
-
-  function updateGradient() {
-    if (gradientOverlay.checked) {
-      const start = gradientStart.value;
-      const end = gradientEnd.value;
-      const angle = gradientAngle.value;
-      bgWrapper.style.backgroundImage = `linear-gradient(${angle}deg, ${start}, ${end})`;
-    }
+  if (textColor && heroContent) {
+    // Set initial value
+    heroContent.style.color = textColor.value;
+    textColor.addEventListener('input', (e) => {
+      heroContent.style.color = e.target.value;
+    });
   }
 
-  gradientStart.addEventListener('input', updateGradient);
-  gradientEnd.addEventListener('input', updateGradient);
-  setupValueInput(gradientAngleValue, gradientAngle, 'deg', () => {
-    updateGradient();
-  });
+  if (textBlendMode && heroContent) {
+    // Set initial value
+    heroContent.style.mixBlendMode = textBlendMode.value;
+    textBlendMode.addEventListener('change', (e) => {
+      heroContent.style.mixBlendMode = e.target.value;
+    });
+  }
 
   // Reset Button
   const resetBtn = document.getElementById('resetControls');
@@ -620,11 +591,8 @@ async function exportAnimation() {
       svgBlendMode: document.getElementById('svgBlendMode').value,
       
       // Background settings
-      bgColor: document.getElementById('bgColor').value,
-      gradientOverlay: document.getElementById('gradientOverlay').checked,
-      gradientStart: document.getElementById('gradientStart').value,
-      gradientEnd: document.getElementById('gradientEnd').value,
-      gradientAngle: parseFloat(document.getElementById('gradientAngle').value)
+      textColor: document.getElementById('textColor').value,
+      textBlendMode: document.getElementById('textBlendMode').value
     };
 
     // Get SVG overlay HTML
@@ -913,10 +881,6 @@ class GradientAnimation {
 
     // Prepare settings for embedding
     const settingsJSON = JSON.stringify(settings, null, 2);
-    const gradientOverlayStyle = settings.gradientOverlay 
-      ? `background-image: linear-gradient(${settings.gradientAngle}deg, ${settings.gradientStart}, ${settings.gradientEnd});` 
-      : '';
-
     // Generate standalone HTML
     const standaloneHTML = `<!DOCTYPE html>
 <html lang="en">
@@ -930,7 +894,7 @@ ${cssContent}
 </head>
 <body>
   <!-- Background Animation Container -->
-  <div class="background-gradient-wrapper" style="background-color: ${settings.bgColor};${gradientOverlayStyle}">
+  <div class="background-gradient-wrapper">
     <canvas id="gradientCanvas"></canvas>
     <!-- SVG Overlay -->
     <div class="svg-overlay" id="svgOverlay" style="display: ${settings.svgEnabled ? 'block' : 'none'}; opacity: ${settings.svgOpacity / 100}; mix-blend-mode: ${settings.svgBlendMode};">
@@ -939,7 +903,7 @@ ${svgHTML}
   </div>
 
   <!-- Sample Hero Content -->
-  <main class="hero-content">
+  <main class="hero-content" style="color: ${settings.textColor}; mix-blend-mode: ${settings.textBlendMode};">
     <h1>The backend to build the modern web.</h1>
     <div class="button-group">
       <button class="primary-btn">

@@ -154,13 +154,6 @@
 
         <div class="control-group">
           <label>
-            <span>Canvas Background Color</span>
-          </label>
-          <input type="color" id="canvasBgColor" value="#000000" class="color-picker">
-        </div>
-
-        <div class="control-group">
-          <label>
             <span>Gradient Count</span>
             <input type="text" class="value-display" id="gradientCountValue" value="5" data-unit="" data-slider-id="gradientCount">
           </label>
@@ -377,47 +370,45 @@
         </div>
       </section>
 
-      <!-- Background Controls -->
+      <!-- Text Controls -->
       <section class="control-section">
         <h3 class="accordion-header">
-          <span>Background</span>
+          <span>Text</span>
           <span class="accordion-icon">▼</span>
         </h3>
         <div class="accordion-content">
         <div class="control-group">
           <label>
-            <span>Background Color</span>
+            <span>Text Color</span>
           </label>
-          <input type="color" id="bgColor" value="#000000" class="color-picker">
+          <input type="color" id="textColor" value="#ffffff" class="color-picker">
         </div>
 
         <div class="control-group">
           <label>
-            <span>Gradient Overlay</span>
+            <span>Text Mix Blend Mode</span>
           </label>
-          <input type="checkbox" id="gradientOverlay">
+          <select id="textBlendMode" class="select-control">
+            <option value="normal">Normal</option>
+            <option value="multiply">Multiply</option>
+            <option value="screen">Screen</option>
+            <option value="overlay">Overlay</option>
+            <option value="soft-light">Soft Light</option>
+            <option value="hard-light">Hard Light</option>
+            <option value="color-dodge">Color Dodge</option>
+            <option value="color-burn">Color Burn</option>
+            <option value="darken">Darken</option>
+            <option value="lighten">Lighten</option>
+            <option value="difference">Difference</option>
+            <option value="exclusion">Exclusion</option>
+          </select>
         </div>
 
-        <div class="control-group" id="gradientControls" style="display: none;">
+        <div class="control-group">
           <label>
-            <span>Gradient Start Color</span>
+            <span>Canvas Background Color</span>
           </label>
-          <input type="color" id="gradientStart" value="#000000" class="color-picker">
-        </div>
-
-        <div class="control-group" id="gradientControls2" style="display: none;">
-          <label>
-            <span>Gradient End Color</span>
-          </label>
-          <input type="color" id="gradientEnd" value="#000000" class="color-picker">
-        </div>
-
-        <div class="control-group" id="gradientControls3" style="display: none;">
-          <label>
-            <span>Gradient Angle</span>
-            <input type="text" class="value-display" id="gradientAngleValue" value="180deg" data-unit="deg" data-slider-id="gradientAngle">
-          </label>
-          <input type="range" id="gradientAngle" min="0" max="360" value="180" class="slider">
+          <input type="color" id="canvasBgColor" value="#000000" class="color-picker">
         </div>
         </div>
       </section>
