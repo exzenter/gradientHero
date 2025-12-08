@@ -27,8 +27,12 @@ class GradientAnimation {
       colorIntensity: 0.6,
       backgroundColor: '#000000',
       gradientFade: 0.5,
+      hueRotationSpeed: 0, // Speed of hue rotation animation (0 = off, 0-10)
+      animatedHue: 0, // Current animated hue rotation value
       hueStart: 200,
       hueEnd: 280,
+      hueSeparation: 100,
+      evenlySpacedColors: true,
       saturationMin: 60,
       saturationMax: 100,
       lightnessMin: 20,
@@ -93,7 +97,18 @@ class GradientAnimation {
     } else {
       // Generate colors from hue range
       const hueRange = this.settings.hueEnd - this.settings.hueStart;
-      const hue = this.settings.hueStart + (Math.random() * hueRange);
+      const separationRange = hueRange * (this.settings.hueSeparation / 100);
+      
+      let hue;
+      if (this.settings.evenlySpacedColors && index !== null && this.settings.gradientCount > 1) {
+        // Evenly spaced hues
+        const spacing = separationRange / (this.settings.gradientCount - 1);
+        hue = this.settings.hueStart + (index * spacing);
+      } else {
+        // Random distribution within separation range
+        hue = this.settings.hueStart + (Math.random() * separationRange);
+      }
+      
       const saturation = this.settings.saturationMin + Math.random() * (this.settings.saturationMax - this.settings.saturationMin);
       const lightness = this.settings.lightnessMin + Math.random() * (this.settings.lightnessMax - this.settings.lightnessMin);
       return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
@@ -124,9 +139,25 @@ class GradientAnimation {
         gradient.color = this.settings.paletteColors[paletteIndex];
       } else {
         // In hue-range mode, animate color with hue rotation
-        const hueShift = Math.sin(this.time * 0.3 + i) * 20 + this.settings.hue;
         const hueRange = this.settings.hueEnd - this.settings.hueStart;
-        const baseHue = this.settings.hueStart + (hueRange / 2) + hueShift;
+        const separationRange = hueRange * (this.settings.hueSeparation / 100);
+        
+        let baseHue;
+        if (this.settings.evenlySpacedColors && this.settings.gradientCount > 1) {
+          // Evenly spaced hues
+          const spacing = separationRange / (this.settings.gradientCount - 1);
+          const baseHueValue = this.settings.hueStart + (gradient.baseIndex * spacing);
+          // Add animated hue shift for movement
+          const hueShift = Math.sin(this.time * 0.3 + i) * 20 + this.settings.hue;
+          baseHue = baseHueValue + hueShift;
+        } else {
+          // Random distribution within separation range, with animation
+          const hueShift = Math.sin(this.time * 0.3 + i) * 20 + this.settings.hue;
+          // Use baseIndex to maintain some consistency but allow variation
+          const randomOffset = (gradient.baseIndex * 0.1) % 1; // Pseudo-random based on index
+          baseHue = this.settings.hueStart + (randomOffset * separationRange) + hueShift;
+        }
+        
         const sat = Math.max(
           this.settings.saturationMin, 
           Math.min(this.settings.saturationMax, 
@@ -313,13 +344,24 @@ class GradientAnimation {
     if (this.settings.brightness !== 100) filter.push(`brightness(${this.settings.brightness}%)`);
     if (this.settings.contrast !== 100) filter.push(`contrast(${this.settings.contrast}%)`);
     if (this.settings.saturation !== 100) filter.push(`saturate(${this.settings.saturation}%)`);
-    if (this.settings.hue !== 0) filter.push(`hue-rotate(${this.settings.hue}deg)`);
+    
+    // Combine static hue rotation with animated hue rotation
+    const totalHue = this.settings.hue + this.settings.animatedHue;
+    if (totalHue !== 0) filter.push(`hue-rotate(${totalHue}deg)`);
     
     this.canvas.style.filter = filter.join(' ') || 'none';
   }
   
   animate() {
     this.time += this.speed;
+    
+    // Update animated hue rotation if speed > 0
+    if (this.settings.hueRotationSpeed > 0) {
+      // Rotate hue 360 degrees per second at speed 1, scaled by speed value
+      const hueRotationPerFrame = (this.settings.hueRotationSpeed * 360) / 60; // Assuming 60fps
+      this.settings.animatedHue = (this.settings.animatedHue + hueRotationPerFrame) % 360;
+    }
+    
     this.updateGradients();
     this.draw();
     this.animationId = requestAnimationFrame(() => this.animate());
@@ -332,11 +374,19 @@ class GradientAnimation {
     } else if (key === 'colorMode' || key === 'paletteColors') {
       // Regenerate gradients when color mode or palette changes
       this.createGradients();
+    } else if (key === 'hueSeparation' || key === 'evenlySpacedColors') {
+      // Regenerate gradients when hue separation settings change
+      this.createGradients();
     } else if (key.startsWith('hue') || key.startsWith('saturation') || key.startsWith('lightness')) {
       // Colors will update on next frame, no need to recreate
     } else if (key === 'fadeoutMode' || key === 'fadeoutTime') {
       // Reset fadeout timer when settings change
       this.fadeoutLastTime = Date.now();
+    } else if (key === 'hueRotationSpeed') {
+      // If speed is set to 0, reset animated hue to 0
+      if (value === 0) {
+        this.settings.animatedHue = 0;
+      }
     }
   }
   

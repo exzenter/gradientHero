@@ -58,13 +58,15 @@ const defaults = {
   positionY: 50,
   blendMode: 'normal',
   canvasBgColor: '#000000',
-  gradientFade: 50,
+  gradientFade: 0,
   gradientCount: 5,
   animationSpeed: 50,
   fadeoutMode: 'none',
   fadeoutTime: 10,
   hueStart: 200,
   hueEnd: 280,
+  hueSeparation: 100,
+  evenlySpacedColors: true,
   saturationMin: 60,
   saturationMax: 100,
   lightnessMin: 20,
@@ -296,12 +298,34 @@ function initControls() {
     }
   });
 
-  // Gradient Fade
+  // Gradient Fade (Hue Rotation Animation Speed)
   const gradientFade = document.getElementById('gradientFade');
   const gradientFadeValue = document.getElementById('gradientFadeValue');
-  setupValueInput(gradientFadeValue, gradientFade, '%', (value) => {
+  // Custom handler for gradient fade (displays as decimal, controls hue rotation speed)
+  gradientFade.addEventListener('input', (e) => {
+    const value = e.target.value;
+    gradientFadeValue.value = parseFloat(value).toFixed(1);
     if (gradientAnimation) {
-      gradientAnimation.updateSetting('gradientFade', value / 100);
+      gradientAnimation.updateSetting('hueRotationSpeed', parseFloat(value));
+    }
+  });
+  gradientFadeValue.addEventListener('input', (e) => {
+    let inputValue = parseFloat(e.target.value);
+    if (!isNaN(inputValue)) {
+      const sliderMin = parseFloat(gradientFade.min) || 0;
+      const sliderMax = parseFloat(gradientFade.max) || 10;
+      if (inputValue >= sliderMin && inputValue <= sliderMax) {
+        gradientFade.value = inputValue;
+      }
+      if (gradientAnimation) {
+        gradientAnimation.updateSetting('hueRotationSpeed', inputValue);
+      }
+    }
+  });
+  gradientFadeValue.addEventListener('blur', (e) => {
+    const numValue = parseFloat(e.target.value);
+    if (!isNaN(numValue)) {
+      e.target.value = numValue.toFixed(1);
     }
   });
 
@@ -327,6 +351,27 @@ function initControls() {
   setupValueInput(hueEndValue, hueEnd, '°', (value) => {
     if (gradientAnimation) {
       gradientAnimation.updateSetting('hueEnd', value);
+    }
+  });
+
+  // Hue Separation Controls
+  const evenlySpacedColors = document.getElementById('evenlySpacedColors');
+  const hueSeparation = document.getElementById('hueSeparation');
+  const hueSeparationValue = document.getElementById('hueSeparationValue');
+  const hueSeparationControls = document.getElementById('hueSeparationControls');
+  const hueSeparationSliderControl = document.getElementById('hueSeparationSliderControl');
+
+  if (evenlySpacedColors) {
+    evenlySpacedColors.addEventListener('change', (e) => {
+      if (gradientAnimation) {
+        gradientAnimation.updateSetting('evenlySpacedColors', e.target.checked);
+      }
+    });
+  }
+
+  setupValueInput(hueSeparationValue, hueSeparation, '%', (value) => {
+    if (gradientAnimation) {
+      gradientAnimation.updateSetting('hueSeparation', value);
     }
   });
 
@@ -382,12 +427,16 @@ function initControls() {
       paletteControls3.style.display = 'block';
       paletteControls4.style.display = 'block';
       paletteControls5.style.display = 'block';
+      if (hueSeparationControls) hueSeparationControls.style.display = 'none';
+      if (hueSeparationSliderControl) hueSeparationSliderControl.style.display = 'none';
     } else {
       paletteControls.style.display = 'none';
       paletteControls2.style.display = 'none';
       paletteControls3.style.display = 'none';
       paletteControls4.style.display = 'none';
       paletteControls5.style.display = 'none';
+      if (hueSeparationControls) hueSeparationControls.style.display = 'block';
+      if (hueSeparationSliderControl) hueSeparationSliderControl.style.display = 'block';
     }
   }
 
@@ -587,7 +636,15 @@ async function exportAnimation() {
       positionY: getActualValue('positionYValue', 'positionY', '%') / 100,
       blendMode: document.getElementById('blendMode').value,
       backgroundColor: document.getElementById('canvasBgColor').value,
-      gradientFade: getActualValue('gradientFadeValue', 'gradientFade', '%') / 100,
+      hueRotationSpeed: (() => {
+        const el = document.getElementById('gradientFadeValue');
+        if (el && el.value) {
+          const val = parseFloat(el.value);
+          if (!isNaN(val)) return val;
+        }
+        const slider = document.getElementById('gradientFade');
+        return slider ? parseFloat(slider.value) : 0;
+      })(),
       gradientCount: getActualValue('gradientCountValue', 'gradientCount', ''),
       gradientSpeed: (() => {
         const el = document.getElementById('animationSpeedValue');
@@ -600,10 +657,27 @@ async function exportAnimation() {
       })(),
       fadeoutMode: document.getElementById('fadeoutMode').value,
       fadeoutTime: getActualValue('fadeoutTimeValue', 'fadeoutTime', 's'),
+      gradientFade: (() => {
+        // gradientFade is not directly controlled, but we can get it from the animation instance
+        // or use default value. The control labeled "Gradient Color Fade" actually controls hueRotationSpeed
+        if (gradientAnimation && gradientAnimation.settings.gradientFade !== undefined) {
+          return gradientAnimation.settings.gradientFade;
+        }
+        return 0.5; // default value
+      })(),
+      animatedHue: (() => {
+        // Capture current animated hue rotation to preserve color state
+        if (gradientAnimation && gradientAnimation.settings.animatedHue !== undefined) {
+          return gradientAnimation.settings.animatedHue;
+        }
+        return 0;
+      })(),
       
       // Color settings
       hueStart: getActualValue('hueStartValue', 'hueStart', '°'),
       hueEnd: getActualValue('hueEndValue', 'hueEnd', '°'),
+      hueSeparation: getActualValue('hueSeparationValue', 'hueSeparation', '%'),
+      evenlySpacedColors: document.getElementById('evenlySpacedColors').checked,
       saturationMin: getActualValue('saturationMinValue', 'saturationMin', '%'),
       saturationMax: getActualValue('saturationMaxValue', 'saturationMax', '%'),
       lightnessMin: getActualValue('lightnessMinValue', 'lightnessMin', '%'),
@@ -637,7 +711,10 @@ async function exportAnimation() {
       
       // Text settings
       textColor: document.getElementById('textColor').value,
-      textBlendMode: document.getElementById('textBlendMode').value
+      textBlendMode: document.getElementById('textBlendMode').value,
+      
+      // Animation state (to preserve colors)
+      initialTime: gradientAnimation ? gradientAnimation.time : 0
     };
 
     // Get SVG overlay HTML
@@ -715,10 +792,11 @@ class GradientAnimation {
       opacity: 1, blur: 0, brightness: 100, contrast: 100, saturation: 100, hue: 0,
       scale: 1, positionX: 0.5, positionY: 0.5, blendMode: 'normal',
       gradientCount: 5, gradientSpeed: 0.5, colorIntensity: 0.6, backgroundColor: '#000000',
-      gradientFade: 0.5, hueStart: 200, hueEnd: 280, saturationMin: 60, saturationMax: 100,
-      lightnessMin: 20, lightnessMax: 50, colorMode: 'hue-range',
+      gradientFade: 0.5, hueStart: 200, hueEnd: 280, hueSeparation: 100, evenlySpacedColors: true,
+      saturationMin: 60, saturationMax: 100, lightnessMin: 20, lightnessMax: 50, colorMode: 'hue-range',
       paletteColors: ['#4a90e2', '#5ba3f5', '#6bb6ff', '#7bc9ff', '#8bdaff'],
-      fadeoutMode: 'none', fadeoutTime: 10
+      fadeoutMode: 'none', fadeoutTime: 10,
+      hueRotationSpeed: 0, animatedHue: 0
     };
     this.fadeoutLastTime = Date.now();
     this.accumulatingBlendModes = ['lighten', 'screen', 'color-dodge', 'overlay', 'soft-light'];
@@ -763,7 +841,14 @@ class GradientAnimation {
       return this.settings.paletteColors[paletteIndex];
     } else {
       const hueRange = this.settings.hueEnd - this.settings.hueStart;
-      const hue = this.settings.hueStart + (Math.random() * hueRange);
+      const separationRange = hueRange * (this.settings.hueSeparation / 100);
+      let hue;
+      if (this.settings.evenlySpacedColors && index !== null && this.settings.gradientCount > 1) {
+        const spacing = separationRange / (this.settings.gradientCount - 1);
+        hue = this.settings.hueStart + (index * spacing);
+      } else {
+        hue = this.settings.hueStart + (Math.random() * separationRange);
+      }
       const saturation = this.settings.saturationMin + Math.random() * (this.settings.saturationMax - this.settings.saturationMin);
       const lightness = this.settings.lightnessMin + Math.random() * (this.settings.lightnessMax - this.settings.lightnessMin);
       return \`hsl(\${hue}, \${saturation}%, \${lightness}%)\`;
@@ -783,9 +868,19 @@ class GradientAnimation {
         const paletteIndex = gradient.baseIndex % this.settings.paletteColors.length;
         gradient.color = this.settings.paletteColors[paletteIndex];
       } else {
-        const hueShift = Math.sin(this.time * 0.3 + i) * 20 + this.settings.hue;
         const hueRange = this.settings.hueEnd - this.settings.hueStart;
-        const baseHue = this.settings.hueStart + (hueRange / 2) + hueShift;
+        const separationRange = hueRange * (this.settings.hueSeparation / 100);
+        let baseHue;
+        if (this.settings.evenlySpacedColors && this.settings.gradientCount > 1) {
+          const spacing = separationRange / (this.settings.gradientCount - 1);
+          const baseHueValue = this.settings.hueStart + (gradient.baseIndex * spacing);
+          const hueShift = Math.sin(this.time * 0.3 + i) * 20 + this.settings.hue;
+          baseHue = baseHueValue + hueShift;
+        } else {
+          const hueShift = Math.sin(this.time * 0.3 + i) * 20 + this.settings.hue;
+          const randomOffset = (gradient.baseIndex * 0.1) % 1;
+          baseHue = this.settings.hueStart + (randomOffset * separationRange) + hueShift;
+        }
         const sat = Math.max(this.settings.saturationMin, Math.min(this.settings.saturationMax, (this.settings.saturationMin + this.settings.saturationMax) / 2 + Math.sin(this.time + i) * ((this.settings.saturationMax - this.settings.saturationMin) / 2)));
         const light = Math.max(this.settings.lightnessMin, Math.min(this.settings.lightnessMax, (this.settings.lightnessMin + this.settings.lightnessMax) / 2 + Math.sin(this.time * 0.5 + i) * ((this.settings.lightnessMax - this.settings.lightnessMin) / 2)));
         gradient.color = \`hsl(\${baseHue % 360}, \${sat}%, \${light}%)\`;
@@ -898,11 +993,16 @@ class GradientAnimation {
     if (this.settings.brightness !== 100) filter.push(\`brightness(\${this.settings.brightness}%)\`);
     if (this.settings.contrast !== 100) filter.push(\`contrast(\${this.settings.contrast}%)\`);
     if (this.settings.saturation !== 100) filter.push(\`saturate(\${this.settings.saturation}%)\`);
-    if (this.settings.hue !== 0) filter.push(\`hue-rotate(\${this.settings.hue}deg)\`);
+    const totalHue = this.settings.hue + this.settings.animatedHue;
+    if (totalHue !== 0) filter.push(\`hue-rotate(\${totalHue}deg)\`);
     this.canvas.style.filter = filter.join(' ') || 'none';
   }
   animate() {
     this.time += this.speed;
+    if (this.settings.hueRotationSpeed > 0) {
+      const hueRotationPerFrame = (this.settings.hueRotationSpeed * 360) / 60;
+      this.settings.animatedHue = (this.settings.animatedHue + hueRotationPerFrame) % 360;
+    }
     this.updateGradients();
     this.draw();
     this.animationId = requestAnimationFrame(() => this.animate());
@@ -913,8 +1013,14 @@ class GradientAnimation {
       this.createGradients();
     } else if (key === 'colorMode' || key === 'paletteColors') {
       this.createGradients();
+    } else if (key === 'hueSeparation' || key === 'evenlySpacedColors') {
+      this.createGradients();
     } else if (key === 'fadeoutMode' || key === 'fadeoutTime') {
       this.fadeoutLastTime = Date.now();
+    } else if (key === 'hueRotationSpeed') {
+      if (value === 0) {
+        this.settings.animatedHue = 0;
+      }
     }
   }
   destroy() {
@@ -973,13 +1079,22 @@ ${jsContent}
       const canvasSettings = ['opacity', 'blur', 'brightness', 'contrast', 'saturation', 'hue', 
         'scale', 'positionX', 'positionY', 'blendMode', 'backgroundColor', 'gradientFade', 
         'gradientCount', 'gradientSpeed', 'fadeoutMode', 'fadeoutTime', 'hueStart', 'hueEnd', 
-        'saturationMin', 'saturationMax', 'lightnessMin', 'lightnessMax', 'colorMode', 'paletteColors'];
+        'hueSeparation', 'evenlySpacedColors', 'saturationMin', 'saturationMax', 'lightnessMin', 'lightnessMax', 'colorMode', 'paletteColors',
+        'hueRotationSpeed', 'animatedHue'];
       
       canvasSettings.forEach(key => {
         if (settings[key] !== undefined) {
           animation.updateSetting(key, settings[key]);
         }
       });
+      
+      // Set initial time and animatedHue to preserve color state
+      if (settings.initialTime !== undefined) {
+        animation.time = settings.initialTime;
+      }
+      if (settings.animatedHue !== undefined) {
+        animation.settings.animatedHue = settings.animatedHue;
+      }
     }
     
     // Initialize SVG pattern generator with exported settings
@@ -1063,12 +1178,20 @@ document.addEventListener('DOMContentLoaded', () => {
       const paletteControls4 = document.getElementById('paletteControls4');
       const paletteControls5 = document.getElementById('paletteControls5');
       
+      const hueSeparationControls = document.getElementById('hueSeparationControls');
+      const hueSeparationSliderControl = document.getElementById('hueSeparationSliderControl');
+      
       if (mode === 'palette') {
         if (paletteControls) paletteControls.style.display = 'block';
         if (paletteControls2) paletteControls2.style.display = 'block';
         if (paletteControls3) paletteControls3.style.display = 'block';
         if (paletteControls4) paletteControls4.style.display = 'block';
         if (paletteControls5) paletteControls5.style.display = 'block';
+        if (hueSeparationControls) hueSeparationControls.style.display = 'none';
+        if (hueSeparationSliderControl) hueSeparationSliderControl.style.display = 'none';
+      } else {
+        if (hueSeparationControls) hueSeparationControls.style.display = 'block';
+        if (hueSeparationSliderControl) hueSeparationSliderControl.style.display = 'block';
       }
       
       // Initialize palette colors in gradientAnimation

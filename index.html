@@ -171,9 +171,9 @@
         <div class="control-group">
           <label>
             <span>Gradient Color Fade</span>
-            <input type="text" class="value-display" id="gradientFadeValue" value="50%" data-unit="%" data-slider-id="gradientFade">
+            <input type="text" class="value-display" id="gradientFadeValue" value="0" data-unit="" data-slider-id="gradientFade">
           </label>
-          <input type="range" id="gradientFade" min="0" max="100" value="50" class="slider">
+          <input type="range" id="gradientFade" min="0" max="10" value="0" step="0.1" class="slider">
         </div>
         </div>
       </section>
@@ -199,6 +199,21 @@
             <input type="text" class="value-display" id="hueEndValue" value="280°" data-unit="°" data-slider-id="hueEnd">
           </label>
           <input type="range" id="hueEnd" min="0" max="360" value="280" class="slider">
+        </div>
+
+        <div class="control-group" id="hueSeparationControls" style="display: none;">
+          <label>
+            <input type="checkbox" id="evenlySpacedColors" checked>
+            <span>Evenly Spaced Colors</span>
+          </label>
+        </div>
+
+        <div class="control-group" id="hueSeparationSliderControl" style="display: none;">
+          <label>
+            <span>Hue Separation</span>
+            <input type="text" class="value-display" id="hueSeparationValue" value="100%" data-unit="%" data-slider-id="hueSeparation">
+          </label>
+          <input type="range" id="hueSeparation" min="0" max="100" value="100" class="slider">
         </div>
 
         <div class="control-group">
