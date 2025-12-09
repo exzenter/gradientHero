@@ -24,6 +24,8 @@ class GradientAnimation {
       positionX: 0.5,
       positionY: 0.5,
       blendMode: 'normal',
+      gradientBlendMode: 'normal',
+      gradientBlendModeEnabled: false,
       gradientCount: 5,
       gradientSpeed: 0.5,
       colorIntensity: 0.6,
@@ -286,24 +288,50 @@ class GradientAnimation {
     const shouldFadeout = this.settings.fadeoutMode !== 'none' && 
                          this.accumulatingBlendModes.includes(this.settings.blendMode);
     
-    // Clear canvas with background color
-    this.ctx.globalCompositeOperation = 'source-over';
-    this.ctx.fillStyle = this.settings.backgroundColor;
-    this.ctx.fillRect(0, 0, width, height);
+    // If gradient blend mode is enabled, we need a two-pass approach
+    let tempCanvas = null;
+    let tempCtx = null;
     
-    // Apply global settings
-    this.ctx.globalCompositeOperation = this.settings.blendMode;
-    
-    // Apply blur filter to context (only affects drawn content, not canvas edges)
-    if (this.settings.blur > 0) {
-      this.ctx.filter = `blur(${this.settings.blur}px)`;
+    if (this.settings.gradientBlendModeEnabled) {
+      // Create temporary canvas for gradients
+      tempCanvas = document.createElement('canvas');
+      tempCanvas.width = width;
+      tempCanvas.height = height;
+      tempCtx = tempCanvas.getContext('2d');
+      
+      // Clear temp canvas with transparent background
+      tempCtx.clearRect(0, 0, width, height);
+      
+      // Apply blur filter to temp context if needed
+      if (this.settings.blur > 0) {
+        tempCtx.filter = `blur(${this.settings.blur}px)`;
+      } else {
+        tempCtx.filter = 'none';
+      }
+      
+      // Set gradient blend mode on temp canvas
+      tempCtx.globalCompositeOperation = this.settings.gradientBlendMode;
     } else {
-      this.ctx.filter = 'none';
+      // Clear main canvas with background color
+      this.ctx.globalCompositeOperation = 'source-over';
+      this.ctx.fillStyle = this.settings.backgroundColor;
+      this.ctx.fillRect(0, 0, width, height);
+      
+      // Apply main blend mode for gradients blending with background
+      this.ctx.globalCompositeOperation = this.settings.blendMode;
+      
+      // Apply blur filter to context
+      if (this.settings.blur > 0) {
+        this.ctx.filter = `blur(${this.settings.blur}px)`;
+      } else {
+        this.ctx.filter = 'none';
+      }
     }
     
     // Draw gradients
     // Apply multiplier during drawing if mode is 'drawing'
     const drawingMultiplier = this.settings.gradientSizeMode === 'drawing' ? this.settings.gradientSizeMultiplier : 1.0;
+    const ctx = this.settings.gradientBlendModeEnabled ? tempCtx : this.ctx;
     
     this.gradients.forEach(gradient => {
       // Draw radial gradients if enabled
@@ -328,8 +356,8 @@ class GradientAnimation {
           grad.addColorStop(1, 'transparent');
         }
         
-        this.ctx.fillStyle = grad;
-        this.ctx.fillRect(0, 0, width, height);
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, width, height);
       }
       
       // Draw line gradients if enabled
@@ -356,13 +384,13 @@ class GradientAnimation {
         const scaleX = halfLength / maxRadius;
         const scaleY = halfWidth / maxRadius;
         
-        this.ctx.save();
-        this.ctx.translate(centerX, centerY);
-        this.ctx.rotate(angle);
-        this.ctx.scale(scaleX, scaleY);
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.rotate(angle);
+        ctx.scale(scaleX, scaleY);
         
         // Create radial gradient (will be elongated by the scale transform)
-        const lineGrad = this.ctx.createRadialGradient(0, 0, 0, 0, 0, maxRadius);
+        const lineGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, maxRadius);
         
         if (colorMatch) {
           const [, h, s, l] = colorMatch;
@@ -374,14 +402,36 @@ class GradientAnimation {
           lineGrad.addColorStop(1, 'transparent');
         }
         
-        this.ctx.fillStyle = lineGrad;
+        ctx.fillStyle = lineGrad;
         // Draw a large enough rectangle to cover the scaled gradient
-        this.ctx.fillRect(-maxRadius, -maxRadius, maxRadius * 2, maxRadius * 2);
-        this.ctx.restore();
+        ctx.fillRect(-maxRadius, -maxRadius, maxRadius * 2, maxRadius * 2);
+        ctx.restore();
       }
     });
     
     // Reset filter after drawing
+    if (this.settings.gradientBlendModeEnabled) {
+      tempCtx.filter = 'none';
+      
+      // Now composite the gradient layer onto the main canvas with background and main blend mode
+      // Clear main canvas with background color
+      this.ctx.globalCompositeOperation = 'source-over';
+      this.ctx.fillStyle = this.settings.backgroundColor;
+      this.ctx.fillRect(0, 0, width, height);
+      
+      // Apply blur filter to main context if needed (for consistency)
+      if (this.settings.blur > 0) {
+        this.ctx.filter = `blur(${this.settings.blur}px)`;
+      } else {
+        this.ctx.filter = 'none';
+      }
+      
+      // Draw gradients onto background with main blend mode
+      this.ctx.globalCompositeOperation = this.settings.blendMode;
+      this.ctx.drawImage(tempCanvas, 0, 0);
+    }
+    
+    // Reset filter
     this.ctx.filter = 'none';
     
     // Apply fadeout AFTER drawing (to fade accumulated brightness)

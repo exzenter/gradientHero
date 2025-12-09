@@ -109,6 +109,39 @@ html, body {
   gap: 1rem;
 }
 
+.preset-buttons-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+  max-width: 400px;
+}
+
+.preset-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: transparent;
+  color: #fff;
+  text-decoration: none;
+  font-size: 0.875rem;
+  transition: all 300ms ease;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.preset-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-1px);
+}
+
+.preset-btn:active {
+  transform: translateY(0);
+}
+
 /* Primary Button (Command Line Style) */
 .primary-btn {
   position: relative;
@@ -517,6 +550,27 @@ html, body {
   transform: translateY(0);
 }
 
+.settings-export-textarea {
+  width: 100%;
+  min-height: 200px;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  color: #fff;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  resize: vertical;
+  white-space: pre;
+  overflow-x: auto;
+}
+
+.settings-export-textarea:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
 /* Scrollbar Styling */
 .controls-overlay::-webkit-scrollbar {
   width: 8px;
@@ -542,6 +596,17 @@ html, body {
 @media (max-width: 768px) {
   .hero-content {
     padding: 2rem 1.5rem;
+  }
+  
+  .preset-buttons-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+    max-width: 100%;
+  }
+
+  .preset-btn {
+    padding: 0.625rem 0.75rem;
+    font-size: 0.8125rem;
   }
   
   .button-group {

@@ -17,6 +17,17 @@
   <!-- Sample Hero Content -->
   <main class="hero-content">
     <h1>The backend to build the modern web.</h1>
+    <div class="preset-buttons-grid">
+      <button class="preset-btn" data-preset="1">Preset 1</button>
+      <button class="preset-btn" data-preset="2">Preset 2</button>
+      <button class="preset-btn" data-preset="3">Preset 3</button>
+      <button class="preset-btn" data-preset="4">Preset 4</button>
+      <button class="preset-btn" data-preset="5">Preset 5</button>
+      <button class="preset-btn" data-preset="6">Preset 6</button>
+      <button class="preset-btn" data-preset="7">Preset 7</button>
+      <button class="preset-btn" data-preset="8">Preset 8</button>
+      <button class="preset-btn" data-preset="9">Preset 9</button>
+    </div>
     <div class="button-group">
       <button class="primary-btn" id="settingsBtn">
         <span class="default-label">Settings</span>
@@ -149,6 +160,27 @@
             <span>Mix Blend Mode</span>
           </label>
           <select id="blendMode" class="select-control">
+            <option value="normal">Normal</option>
+            <option value="multiply">Multiply</option>
+            <option value="screen">Screen</option>
+            <option value="overlay">Overlay</option>
+            <option value="soft-light">Soft Light</option>
+            <option value="hard-light">Hard Light</option>
+            <option value="color-dodge">Color Dodge</option>
+            <option value="color-burn">Color Burn</option>
+            <option value="darken">Darken</option>
+            <option value="lighten">Lighten</option>
+            <option value="difference">Difference</option>
+            <option value="exclusion">Exclusion</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label style="display: flex; align-items: center; gap: 0.5rem;">
+            <input type="checkbox" id="gradientBlendModeEnabled" style="width: auto; margin: 0;">
+            <span>Gradient Blend Mode (Gradient-to-Gradient Only)</span>
+          </label>
+          <select id="gradientBlendMode" class="select-control" style="margin-top: 0.5rem;">
             <option value="normal">Normal</option>
             <option value="multiply">Multiply</option>
             <option value="screen">Screen</option>
@@ -510,6 +542,26 @@
           </label>
           <input type="color" id="canvasBgColor" value="#000000" class="color-picker">
         </div>
+        </div>
+      </section>
+
+      <!-- Export Settings Section -->
+      <section class="control-section">
+        <h3 class="accordion-header">
+          <span>Export Settings</span>
+          <span class="accordion-icon">▼</span>
+        </h3>
+        <div class="accordion-content">
+          <div class="control-group">
+            <label>
+              <span>Current Settings (JSON)</span>
+            </label>
+            <textarea id="settingsExport" class="settings-export-textarea" readonly></textarea>
+            <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+              <button class="export-btn" id="updateExportBtn" style="flex: 1;">Update Export</button>
+              <button class="export-btn" id="copyExportBtn" style="flex: 1;">Copy to Clipboard</button>
+            </div>
+          </div>
         </div>
       </section>
 
